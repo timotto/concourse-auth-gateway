@@ -15,3 +15,10 @@ url.
 
 The ```/api/v1/pipelines``` endpoint has special treatment: it is executed with every
 known credential and the result is merged.
+
+## Configuration
+
+The ```STATE_FILENAME``` environment variable controls the location of the file to save
+the stored credentials and tokens in.
+
+The ```PORT``` environment variable defines the TCP port the application is listening ong. 
