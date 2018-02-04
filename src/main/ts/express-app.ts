@@ -12,8 +12,9 @@ export class ExpressApp {
         app.set("port", process.env.PORT || 3001);
         this.registerEndpoint('/healthz', HealthEndpoint);
 
+        const stateFilename = process.env.STATE_FILENAME || 'credentials.json';
         const concourseResponseParser = new ConcourseResponseParser();
-        const credentialRepository2 = new CredentialRepository2(concourseResponseParser, 'credentials.json');
+        const credentialRepository2 = new CredentialRepository2(concourseResponseParser, stateFilename);
         const concourseRequestParser = new ConcourseRequestParser();
         const concourseProxy = new ConcourseProxy(concourseResponseParser, credentialRepository2);
         const concourseEndpoint2 = new ConcourseEndpoint2(
