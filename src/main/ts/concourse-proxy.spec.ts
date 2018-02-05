@@ -10,13 +10,11 @@ const mockTeam = 'mock-team';
 
 describe('ConcourseProxy', () => {
     let unitUnderTest: ConcourseProxy;
-    let concourseResponseParser: ConcourseResponseParser;
     let credentialRepository2: CredentialRepository2;
     let mockRequest: ParsedConcourseRequest;
     beforeEach(() => {
-        concourseResponseParser = new ConcourseResponseParser();
-        credentialRepository2 = new CredentialRepository2(concourseResponseParser);
-        unitUnderTest = new ConcourseProxy(concourseResponseParser, credentialRepository2);
+        credentialRepository2 = new CredentialRepository2();
+        unitUnderTest = new ConcourseProxy(credentialRepository2);
         mockRequest = new ParsedConcourseRequest(undefined, mockConcourseUrl, mockTeam, undefined);
         mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);
     });
@@ -120,12 +118,12 @@ describe('ConcourseProxy', () => {
             mockRequest.request.url = expectedPath;
             mockRequest.request.headers = {'x-concourse-url': mockConcourseUrl};
 
-            spyOn(concourseResponseParser, 'parseConcourseResponse')
+            spyOn(ConcourseResponseParser, 'parseConcourseResponse')
                 .and.returnValue(Promise.resolve(new ParsedConcourseResponse(undefined)));
 
             await unitUnderTest.proxyRequest(mockRequest);
 
-            expect(concourseResponseParser.parseConcourseResponse).toHaveBeenCalled();
+            expect(ConcourseResponseParser.parseConcourseResponse).toHaveBeenCalled();
         });
         it('saves the ATC bearer token if one was found in the Concourse response', async () => {
             const expectedPath = `/api/v1/teams/${mockTeam}/pipelines`;
@@ -140,7 +138,7 @@ describe('ConcourseProxy', () => {
 
             const parsedConcourseResponse = new ParsedConcourseResponse(undefined);
             parsedConcourseResponse.atcToken = expectedToken;
-            spyOn(concourseResponseParser, 'parseConcourseResponse')
+            spyOn(ConcourseResponseParser, 'parseConcourseResponse')
                 .and.returnValue(Promise.resolve(parsedConcourseResponse));
 
             mockRequest.request.url = expectedPath;

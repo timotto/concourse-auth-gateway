@@ -1,6 +1,5 @@
 import {CredentialRepository2} from "./credential-repository2";
 import * as fs from 'fs';
-import {ConcourseResponseParser} from "./concourse-response-parser";
 import * as nock from 'nock';
 
 const testStateFilename = 'test-state.json';
@@ -17,10 +16,8 @@ const invalidTokenValues = [undefined, null, ''];
 
 describe('Credential Repository 2', () => {
     let unitUnderTest: CredentialRepository2;
-    let concourseResponseParser: ConcourseResponseParser;
     beforeEach(async () => {
-        concourseResponseParser = new ConcourseResponseParser();
-        unitUnderTest = new CredentialRepository2(concourseResponseParser);
+        unitUnderTest = new CredentialRepository2();
         await unitUnderTest.load();
     });
     afterEach(done => {
@@ -66,11 +63,11 @@ describe('Credential Repository 2', () => {
             expect(actualCredentials).toEqual(validCredentials);
         });
         it('returns the credentials persisted in the state file', async () => {
-            const instance1 = new CredentialRepository2(concourseResponseParser, testStateFilename);
+            const instance1 = new CredentialRepository2(testStateFilename);
             await instance1.load();
             await instance1.saveAuthenticationCredentials(validConcourseUrl, validTeam, validCredentials);
 
-            const instance2 = new CredentialRepository2(concourseResponseParser, testStateFilename);
+            const instance2 = new CredentialRepository2(testStateFilename);
             await instance2.load();
             const actualResult = await instance2.loadAuthenticationCredentials(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validCredentials);
@@ -115,11 +112,11 @@ describe('Credential Repository 2', () => {
             expect(actualToken).toEqual(validToken);
         });
         it('returns the token persisted in the state file', async () => {
-            const instance1 = new CredentialRepository2(concourseResponseParser, testStateFilename);
+            const instance1 = new CredentialRepository2(testStateFilename);
             await instance1.load();
             await instance1.saveAtcToken(validConcourseUrl, validTeam, validToken);
 
-            const instance2 = new CredentialRepository2(concourseResponseParser, testStateFilename);
+            const instance2 = new CredentialRepository2(testStateFilename);
             await instance2.load();
             const actualResult = await instance2.loadAtcToken(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validToken);
@@ -166,16 +163,16 @@ describe('Credential Repository 2', () => {
     });
     describe('load', () => {
         it('does nothing if the stateFilename property is undefined', async () => {
-            const explicitlyUndefined = new CredentialRepository2(concourseResponseParser, undefined);
+            const explicitlyUndefined = new CredentialRepository2(undefined);
             await explicitlyUndefined.load();
 
-            const implicitlyUndefined = new CredentialRepository2(concourseResponseParser);
+            const implicitlyUndefined = new CredentialRepository2();
             await implicitlyUndefined.load();
         });
         it('does nothing if the file specified by stateFilename property does not exist', async () => {
             const filename = 'non-existing-file';
             expect(fs.existsSync(filename)).toBeFalsy(`test file ${filename} should not exist! delete and re-run test!`);
-            const explicitlyUndefined = new CredentialRepository2(concourseResponseParser, filename);
+            const explicitlyUndefined = new CredentialRepository2(filename);
             await explicitlyUndefined.load();
         });
     });
@@ -260,8 +257,8 @@ describe('Credential Repository 2', () => {
                 .get(`/api/v1/teams/${validTeam}/auth/token`)
                 .reply(200, 'OK', {'Set-Cookie': `ATC-Authorization="${validToken}"`});
 
-            spyOn(unitUnderTest, 'saveAtcToken')
-                .and.returnValue(Promise.reject('expected rejection'));
+            spyOn(fs, 'readFile')
+                .and.callFake((filename, cb) => cb('expected error'));
 
             const actualResponse = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
 

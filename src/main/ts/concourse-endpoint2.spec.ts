@@ -2,9 +2,9 @@ import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import {CredentialRepository2} from "./credential-repository2";
 import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseProxy} from "./concourse-proxy";
-import {ConcourseResponseParser} from "./concourse-response-parser";
 import {Router, Request, Response} from 'express';
 import * as nock from "nock";
+import {ParsedConcourseResponse} from "./concourse-response-parser";
 
 const mockConcourseUrl = 'http://concourse.example.com';
 const mockTeam = 'mock-team';
@@ -12,47 +12,50 @@ const mockTeam = 'mock-team';
 describe('Concourse Endpoint 2', () => {
     let unitUnderTest: ConcourseEndpoint2;
     let credentialRepository2: CredentialRepository2;
-    let concourseRequestParser: ConcourseRequestParser;
-    let concourseResponseParser: ConcourseResponseParser;
     let concourseProxy: ConcourseProxy;
     let mockRouter: Router;
 
     let mockResponse: Response;
     let mockRequest: any;
     beforeEach(() => {
-        concourseResponseParser = new ConcourseResponseParser();
-        credentialRepository2 = new CredentialRepository2(concourseResponseParser);
-        concourseRequestParser = new ConcourseRequestParser();
-        concourseProxy = new ConcourseProxy(concourseResponseParser, credentialRepository2);
+        credentialRepository2 = new CredentialRepository2();
+        concourseProxy = new ConcourseProxy(credentialRepository2);
         mockRouter = jasmine.createSpyObj<Router>('Router', ['get']);
-        unitUnderTest = new ConcourseEndpoint2(credentialRepository2,
-            concourseRequestParser, concourseProxy, mockRouter);
+        unitUnderTest = new ConcourseEndpoint2(credentialRepository2, concourseProxy, mockRouter);
 
         mockResponse = jasmine.createSpyObj<Response>('Response', ['status', 'send', 'contentType']);
         (mockResponse.status as jasmine.Spy).and.returnValue(mockResponse);
         (mockResponse.send as jasmine.Spy).and.returnValue(mockResponse);
+        (mockResponse as any).headers = {};
 
-        mockRequest = jasmine.createSpyObj<Request>('Request', ['status', 'send', 'get']);
+        mockRequest = jasmine.createSpyObj<Request>('Request', ['status', 'send', 'get', 'headers']);
     });
     describe('handleRequest', () => {
+        let mockParsedRequest: ParsedConcourseRequest;
+        let mockParsedResponse: ParsedConcourseResponse;
+        beforeEach(() => {
+            mockParsedRequest = new ParsedConcourseRequest(mockRequest, mockConcourseUrl, mockTeam, undefined);
+            mockParsedResponse = jasmine.createSpyObj<ParsedConcourseResponse>('ParsedConcourseResponse', ['setCsrfToken']);
+            (mockParsedResponse as any).response = mockResponse;
+        });
         it('uses the ConcourseRequestParser.parseRequest function on the request', async () => {
             // stub
             spyOn(concourseProxy, 'proxyRequest')
-                .and.returnValue(Promise.resolve());
+                .and.returnValue(Promise.resolve(mockParsedResponse));
 
             // spy
-            spyOn(concourseRequestParser, 'parseRequest')
-                .and.returnValue(new ParsedConcourseRequest(mockRequest, mockConcourseUrl, mockTeam, undefined));
+            spyOn(ConcourseRequestParser, 'parseRequest')
+                .and.returnValue(mockParsedRequest);
 
             // given
             await unitUnderTest.handleRequest(mockRequest, mockResponse);
-            expect(concourseRequestParser.parseRequest)
+            expect(ConcourseRequestParser.parseRequest)
                 .toHaveBeenCalledWith(mockRequest);
         });
         it('saves authentication credentials if found in the request', async () => {
             // stub
             spyOn(concourseProxy, 'proxyRequest')
-                .and.returnValue(Promise.resolve());
+                .and.returnValue(Promise.resolve(mockParsedResponse));
 
             // spy
             spyOn(credentialRepository2, 'saveAuthenticationCredentials')
@@ -60,7 +63,7 @@ describe('Concourse Endpoint 2', () => {
 
             // given
             const expectedAuthenticationValue = 'Basic dXNlcjpwYXNzd29yZA==';
-            spyOn(concourseRequestParser, 'parseRequest')
+            spyOn(ConcourseRequestParser, 'parseRequest')
                 .and.returnValue(new ParsedConcourseRequest(mockRequest, mockConcourseUrl, mockTeam, expectedAuthenticationValue));
 
             // when
@@ -73,11 +76,11 @@ describe('Concourse Endpoint 2', () => {
         it('calls the ConcourseProxy.proxyRequest function with ConcourseRequestParse.parseRequest result', async () => {
             // spy
             spyOn(concourseProxy, 'proxyRequest')
-                .and.returnValue(Promise.resolve());
+                .and.returnValue(Promise.resolve(mockParsedResponse));
 
             // given
             const parsedConcourseRequest = new ParsedConcourseRequest(mockRequest, mockConcourseUrl, mockTeam, undefined);
-            spyOn(concourseRequestParser, 'parseRequest')
+            spyOn(ConcourseRequestParser, 'parseRequest')
                 .and.returnValue(parsedConcourseRequest);
 
             // when
@@ -90,7 +93,7 @@ describe('Concourse Endpoint 2', () => {
         it('responds with a 500 error and the error message if the ConcourseProxy.proxyRequest is rejected', async () => {
             // stub
             const parsedConcourseRequest = new ParsedConcourseRequest(mockRequest, mockConcourseUrl, mockTeam, undefined);
-            spyOn(concourseRequestParser, 'parseRequest')
+            spyOn(ConcourseRequestParser, 'parseRequest')
                 .and.returnValue(parsedConcourseRequest);
 
             // spy
@@ -153,7 +156,7 @@ describe('Concourse Endpoint 2', () => {
             expect(responseSpy.send).toHaveBeenCalledWith(expectedResponseBody);
         });
         it('responds with a 400 bad request error if the X-Concourse-Url HTTP header is missing', async () => {
-            spyOn(concourseRequestParser, 'parseRequest')
+            spyOn(ConcourseRequestParser, 'parseRequest')
                 .and.returnValue(new ParsedConcourseRequest(mockRequest, undefined, mockTeam, undefined));
 
             await unitUnderTest.handleRequest(mockRequest, mockResponse);

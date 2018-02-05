@@ -1,6 +1,6 @@
 import * as request from 'request';
 export class ConcourseResponseParser {
-    public parseConcourseResponse(response: request.Response): Promise<ParsedConcourseResponse> {
+    public static parseConcourseResponse(response: request.Response): Promise<ParsedConcourseResponse> {
         const parsedResponse = new ParsedConcourseResponse(response);
         parsedResponse.setCsrfToken(response.headers['x-csrf-token']);
         parsedResponse.setAtcToken(response.headers['set-cookie']);

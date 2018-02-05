@@ -7,8 +7,7 @@ import {CoreOptions} from "request";
 
 export class ConcourseProxy {
 
-    constructor(private concourseResponseParser: ConcourseResponseParser,
-                private credentialRepository: CredentialRepository2) {
+    constructor(private credentialRepository: CredentialRepository2) {
     }
 
     public proxyRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
@@ -21,19 +20,19 @@ export class ConcourseProxy {
     private proxyPipelinesRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
         const promises = this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
             .concat([{token: undefined}])
-            .map(pair => this.createOptions(req, pair.token))
+            .map(pair => ConcourseProxy.createOptions(req, pair.token))
             .map(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options));
 
         return Promise.all(promises)
             .then(responses => responses.reduce(ConcourseProxy.mergeResponseBodies))
-            .then(mergedResponse => this.concourseResponseParser.parseConcourseResponse(mergedResponse))
+            .then(mergedResponse => ConcourseResponseParser.parseConcourseResponse(mergedResponse))
     }
 
     private static mergeResponseBodies(a: request.Response, b: request.Response): request.Response {
         if (a === undefined) return b;
         if (b === undefined) return a;
 
-        a.body = JSON.stringify(Util.uniqueById(JSON.parse(a.body), JSON.parse(b.body)))
+        a.body = JSON.stringify(Util.uniqueById(JSON.parse(a.body), JSON.parse(b.body)));
 
         return a;
     }
@@ -41,13 +40,13 @@ export class ConcourseProxy {
     private proxyGenericRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
         return this.credentialRepository.loadAtcToken(req.concourseUrl, req.team)
             .catch(() => undefined) // missing token is no error
-            .then(atcToken => this.createOptions(req, atcToken))
+            .then(atcToken => ConcourseProxy.createOptions(req, atcToken))
             .then(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options))
-            .then(response => this.concourseResponseParser.parseConcourseResponse(response))
+            .then(response => ConcourseResponseParser.parseConcourseResponse(response))
             .then(parsedConcourseResponse => this.saveBearerToken(req, parsedConcourseResponse))
     }
 
-    private createOptions(req: ParsedConcourseRequest, atcToken: string): CoreOptions {
+    private static createOptions(req: ParsedConcourseRequest, atcToken: string): CoreOptions {
         const options = {headers:{}};
         if (req.isAuthenticationRequest) {
             options.headers['Authorization'] = req.authorizationHeaderValue;

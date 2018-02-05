@@ -2,10 +2,6 @@ import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-reques
 import {Request} from 'express';
 
 describe('ConcourseRequestParser', () => {
-    let unitUnderTest: ConcourseRequestParser;
-    beforeEach(() => {
-        unitUnderTest = new ConcourseRequestParser();
-    });
     describe('parseRequest', () => {
         it('fills the concourseUrl property of the response with the X-Concourse-Url HTTP header value if found in the request', () => {
             const expectedConcourseUrl = 'http://expected-concourse.example.com';
@@ -14,16 +10,16 @@ describe('ConcourseRequestParser', () => {
             request.url = 'url';
 
             request.headers = {'x-concourse-url': expectedConcourseUrl};
-            expect(unitUnderTest.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
+            expect(ConcourseRequestParser.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
 
             request.headers = {'x-concourse-url': [expectedConcourseUrl, undefined]};
-            expect(unitUnderTest.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
+            expect(ConcourseRequestParser.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
 
             request.headers = {'x-concourse-url': [undefined, expectedConcourseUrl, undefined]};
-            expect(unitUnderTest.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
+            expect(ConcourseRequestParser.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
 
             request.headers = {'x-concourse-url': [undefined, undefined]};
-            expect(unitUnderTest.parseRequest(request).concourseUrl).toEqual(undefined);
+            expect(ConcourseRequestParser.parseRequest(request).concourseUrl).toEqual(undefined);
         });
         it('fills the team property of the response if the request url matches the pattern "/api/v1/teams/(.*)/.*"', () => {
             const expectedConcourseUrl = 'http://expected-concourse.example.com';
@@ -33,16 +29,16 @@ describe('ConcourseRequestParser', () => {
             request.headers = {'x-concourse-url': expectedConcourseUrl};
 
             request.url = `/api/v1/teams/${expectedTeam}/something`;
-            expect(unitUnderTest.parseRequest(request).team).toEqual(expectedTeam);
+            expect(ConcourseRequestParser.parseRequest(request).team).toEqual(expectedTeam);
 
             request.url = `/api/v1/teams/${expectedTeam}/pipelines`;
-            expect(unitUnderTest.parseRequest(request).team).toEqual(expectedTeam);
+            expect(ConcourseRequestParser.parseRequest(request).team).toEqual(expectedTeam);
 
             request.url = `/api/v1/teams/${expectedTeam}/some/lower`;
-            expect(unitUnderTest.parseRequest(request).team).toEqual(expectedTeam);
+            expect(ConcourseRequestParser.parseRequest(request).team).toEqual(expectedTeam);
 
             request.url = `/api/v1/user`;
-            expect(unitUnderTest.parseRequest(request).team).toEqual(undefined);
+            expect(ConcourseRequestParser.parseRequest(request).team).toEqual(undefined);
         });
         it('fills the authorizationHeaderValue of the response if an Authorization HTTP header value is found in the request', () => {
             const expectedConcourseUrl = 'http://expected-concourse.example.com';
@@ -56,7 +52,7 @@ describe('ConcourseRequestParser', () => {
             };
 
             request.url = `/api/v1/teams/${expectedTeam}/something`;
-            expect(unitUnderTest.parseRequest(request).authorizationHeaderValue).toEqual(expectedAuthorizationValue);
+            expect(ConcourseRequestParser.parseRequest(request).authorizationHeaderValue).toEqual(expectedAuthorizationValue);
         });
     });
 });

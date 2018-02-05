@@ -1,10 +1,10 @@
-import {Request, Response, NextFunction} from 'express';
+import {Request} from 'express';
 import {Util} from "./util";
 
 const teamUrlMatcher = /\/api\/v1\/teams\/([^\/]*)\/.*/;
 
 export class ConcourseRequestParser {
-    public parseRequest(req: Request): ParsedConcourseRequest {
+    public static parseRequest(req: Request): ParsedConcourseRequest {
         const concourseUrl = Util.firstHeaderValue(req.headers['x-concourse-url']);
         const teamUrl = req.url.match(teamUrlMatcher);
         const team = teamUrl ? teamUrl[1] : undefined;

@@ -5,10 +5,6 @@ import nock = require("nock");
 const mockConcourseUrl = 'http://mock-concourse';
 
 describe('ConcourseResponseParser', () => {
-    let unitUnderTest: ConcourseResponseParser;
-    beforeEach(() => {
-        unitUnderTest = new ConcourseResponseParser();
-    });
     afterEach(() => {
         nock.cleanAll();
     });
@@ -18,7 +14,7 @@ describe('ConcourseResponseParser', () => {
                 .get('/')
                 .reply(200, {some:'content'});
             request.get(`${mockConcourseUrl}/`, async (err, response) => {
-                const actualResponse = await unitUnderTest.parseConcourseResponse(response);
+                const actualResponse = await ConcourseResponseParser.parseConcourseResponse(response);
                 expect(actualResponse.response).toEqual(response);
                 done();
             });
@@ -29,7 +25,7 @@ describe('ConcourseResponseParser', () => {
                 .get('/')
                 .reply(200, {some:'content'}, {'X-Csrf-Token': expectedCsrfToken});
             request.get(`${mockConcourseUrl}/`, async (err, response) => {
-                const actualResponse = await unitUnderTest.parseConcourseResponse(response);
+                const actualResponse = await ConcourseResponseParser.parseConcourseResponse(response);
                 expect(actualResponse.csrfToken).toEqual(expectedCsrfToken);
                 done();
             });
@@ -39,7 +35,7 @@ describe('ConcourseResponseParser', () => {
                 .get('/')
                 .reply(200, {some:'content'}, {'X-Csrf-Token': ''});
             request.get(`${mockConcourseUrl}/`, async (err, response) => {
-                await unitUnderTest.parseConcourseResponse(response)
+                await ConcourseResponseParser.parseConcourseResponse(response)
                     .catch(e => fail(e));
                 done();
             });
@@ -50,7 +46,7 @@ describe('ConcourseResponseParser', () => {
                 .get('/')
                 .reply(200, {some:'content'}, {'Set-Cookie': `ATC-Authorization="${expectedAtcToken}"`});
             request.get(`${mockConcourseUrl}/`, async (err, response) => {
-                const actualResponse = await unitUnderTest.parseConcourseResponse(response);
+                const actualResponse = await ConcourseResponseParser.parseConcourseResponse(response);
                 expect(actualResponse.atcToken).toEqual(expectedAtcToken);
                 done();
             });

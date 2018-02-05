@@ -2,9 +2,7 @@ import {Router} from "express";
 import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import {CredentialRepository2} from "./credential-repository2";
-import {ConcourseRequestParser} from "./concourse-request-parser";
 import {ConcourseProxy} from "./concourse-proxy";
-import {ConcourseResponseParser} from "./concourse-response-parser";
 import {JsonLogger} from "./json-logger";
 
 export class ExpressApp {
@@ -13,13 +11,10 @@ export class ExpressApp {
         this.registerEndpoint('/healthz', HealthEndpoint);
 
         const stateFilename = process.env.STATE_FILENAME || 'credentials.json';
-        const concourseResponseParser = new ConcourseResponseParser();
-        const credentialRepository2 = new CredentialRepository2(concourseResponseParser, stateFilename);
-        const concourseRequestParser = new ConcourseRequestParser();
-        const concourseProxy = new ConcourseProxy(concourseResponseParser, credentialRepository2);
+        const credentialRepository2 = new CredentialRepository2(stateFilename);
+        const concourseProxy = new ConcourseProxy(credentialRepository2);
         const concourseEndpoint2 = new ConcourseEndpoint2(
             credentialRepository2,
-            concourseRequestParser,
             concourseProxy,
             this.router());
 

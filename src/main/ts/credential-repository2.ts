@@ -10,8 +10,7 @@ export class CredentialRepository2 {
 
     private atcTokens = {};
 
-    constructor(private concourseResponseParser: ConcourseResponseParser,
-                private stateFilename?: string) {}
+    constructor(private stateFilename?: string) {}
 
     public saveAuthenticationCredentials(concourseUrl: string, team: string, credentials: string): Promise<void> {
         return assertUrl(concourseUrl)
@@ -71,7 +70,7 @@ export class CredentialRepository2 {
         const options: CoreOptions = {headers:{'Authorization': credentials}};
 
         return Util.rpGet(`${concourseUrl}/api/v1/teams/${team}/auth/token`, options)
-            .then(response => this.concourseResponseParser.parseConcourseResponse(response))
+            .then(response => ConcourseResponseParser.parseConcourseResponse(response))
             .then(parsedResponse => parsedResponse.atcToken)
             .then(atcToken => atcToken === undefined
                 ? Promise.resolve(undefined)
