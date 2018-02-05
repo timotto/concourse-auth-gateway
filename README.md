@@ -21,4 +21,7 @@ known credential and the result is merged.
 The ```STATE_FILENAME``` environment variable controls the location of the file to save
 the stored credentials and tokens in.
 
-The ```PORT``` environment variable defines the TCP port the application is listening ong. 
+The ```PORT``` environment variable defines the TCP port the application is listening on.
+
+If ```CONCOURSE_URL``` is set the ```X-Concourse-Url``` HTTP header will be ignored and
+the Concourse URL is fixed.

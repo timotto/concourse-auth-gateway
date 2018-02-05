@@ -5,7 +5,7 @@ const teamUrlMatcher = /\/api\/v1\/teams\/([^\/]*)\/.*/;
 
 export class ConcourseRequestParser {
     public static parseRequest(req: Request): ParsedConcourseRequest {
-        const concourseUrl = Util.firstHeaderValue(req.headers['x-concourse-url']);
+        const concourseUrl = process.env.CONCOURSE_URL || Util.firstHeaderValue(req.headers['x-concourse-url']);
         const teamUrl = req.url.match(teamUrlMatcher);
         const team = teamUrl ? teamUrl[1] : undefined;
         const authorizationHeaderValue = Util.firstHeaderValue(req.headers['authorization']);

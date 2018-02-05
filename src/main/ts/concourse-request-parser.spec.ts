@@ -3,6 +3,9 @@ import {Request} from 'express';
 
 describe('ConcourseRequestParser', () => {
     describe('parseRequest', () => {
+        afterEach(() => {
+            delete process.env.CONCOURSE_URL;
+        });
         it('fills the concourseUrl property of the response with the X-Concourse-Url HTTP header value if found in the request', () => {
             const expectedConcourseUrl = 'http://expected-concourse.example.com';
             const request: Request = jasmine.createSpyObj<Request>("Request", ['headers', 'url']);
@@ -53,6 +56,18 @@ describe('ConcourseRequestParser', () => {
 
             request.url = `/api/v1/teams/${expectedTeam}/something`;
             expect(ConcourseRequestParser.parseRequest(request).authorizationHeaderValue).toEqual(expectedAuthorizationValue);
+        });
+        it('always uses the CONCOURSE_URL environment variable value as concourseUrl if defined', () => {
+            const expectedConcourseUrl = 'http://expected-concourse.example.com';
+            const unexpectedConcourseUrl = 'http://unexpected-concourse.example.com';
+            const request: Request = jasmine.createSpyObj<Request>("Request", ['headers', 'url']);
+            process.env.CONCOURSE_URL = expectedConcourseUrl;
+            request.url = 'url';
+
+            expect(ConcourseRequestParser.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
+
+            request.headers = {'x-concourse-url': unexpectedConcourseUrl};
+            expect(ConcourseRequestParser.parseRequest(request).concourseUrl).toEqual(expectedConcourseUrl);
         });
     });
 });
