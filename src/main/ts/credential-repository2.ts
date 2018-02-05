@@ -41,11 +41,11 @@ export class CredentialRepository2 {
             .then(atcToken => this.assertAtcToken(concourseUrl, team, atcToken));
     }
 
-    public loadAllAtcTokens(concourseUrl: string): any[] {
-        return Object.keys(this.atcTokens)
+    public loadAllAtcTokens(concourseUrl: string): Promise<any[]> {
+        return Promise.resolve(Object.keys(this.atcTokens)
             .map(keyPairString => ({s: keyPairString, o: JSON.parse(keyPairString)}))
             .filter(p => p.o.url === concourseUrl)
-            .map(p => ({team: p.o.team, token: this.atcTokens[p.s]}));
+            .map(p => ({team: p.o.team, token: this.atcTokens[p.s]})));
     }
 
     public load(): Promise<void> {

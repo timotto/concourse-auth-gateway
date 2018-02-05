@@ -18,14 +18,14 @@ export class ConcourseProxy {
     }
 
     private proxyPipelinesRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
-        const promises = this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
-            .concat([{token: undefined}])
-            .map(pair => ConcourseProxy.createOptions(req, pair.token))
-            .map(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options));
-
-        return Promise.all(promises)
+        return this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
+            .then(tokens => tokens.concat([{token: undefined}])
+                .map(pair => ConcourseProxy.createOptions(req, pair.token))
+                .map(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options)))
+            .then(promises => Promise.all(promises))
             .then(responses => responses.reduce(ConcourseProxy.mergeResponseBodies))
-            .then(mergedResponse => ConcourseResponseParser.parseConcourseResponse(mergedResponse))
+            .then((mergedResponse: request.Response) =>
+                ConcourseResponseParser.parseConcourseResponse(mergedResponse))
     }
 
     private static mergeResponseBodies(a: request.Response, b: request.Response): request.Response {

@@ -154,7 +154,7 @@ describe('ConcourseProxy', () => {
                 const expectedTeam2 = {team: 'team2', token: 'token 2'};
                 const expectedTeams = [expectedTeam1, expectedTeam2];
                 spyOn(credentialRepository2, 'loadAllAtcTokens')
-                    .and.returnValue(expectedTeams);
+                    .and.returnValue(Promise.resolve(expectedTeams));
 
                 mockRequest.request.url = '/api/v1/pipelines';
                 const scope = nock(mockConcourseUrl);
@@ -174,7 +174,7 @@ describe('ConcourseProxy', () => {
                 const expectedTeam2 = {team: 'team2', token: 'token 2', response: [{id:'a'},{id:'b'},{id:'c'},{id:'d'}]};
                 const expectedTeams = [expectedTeam1, expectedTeam2];
                 spyOn(credentialRepository2, 'loadAllAtcTokens')
-                    .and.returnValue(expectedTeams);
+                    .and.returnValue(Promise.resolve(expectedTeams));
 
                 mockRequest.request.url = '/api/v1/pipelines';
                 const scope = nock(mockConcourseUrl);
