@@ -1,6 +1,7 @@
 import {CredentialRepository2} from "./credential-repository2";
 import * as fs from 'fs';
 import {ConcourseResponseParser} from "./concourse-response-parser";
+import * as nock from 'nock';
 
 const testStateFilename = 'test-state.json';
 
@@ -22,7 +23,10 @@ describe('Credential Repository 2', () => {
         unitUnderTest = new CredentialRepository2(concourseResponseParser);
         await unitUnderTest.load();
     });
-    afterEach(done => fs.unlink(testStateFilename, () => done()));
+    afterEach(done => {
+        nock.cleanAll();
+        fs.unlink(testStateFilename, () => done())
+    });
     describe('saveAuthenticationCredentials', () => {
         it('rejects the promise if the URL is invalid', async () => {
             invalidUrlValues.forEach(async url => await unitUnderTest
@@ -120,6 +124,21 @@ describe('Credential Repository 2', () => {
             const actualResult = await instance2.loadAtcToken(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validToken);
         });
+        it('calls requestAtcToken if there is no token but credentials', async () => {
+            // spy
+            spyOn(unitUnderTest, 'requestAtcToken')
+                .and.returnValue(Promise.resolve(undefined));
+
+            // given
+            await unitUnderTest.saveAuthenticationCredentials(validConcourseUrl, validTeam, validCredentials);
+
+            // when
+            await unitUnderTest.loadAtcToken(validConcourseUrl, validTeam);
+
+            // then
+            expect(unitUnderTest.requestAtcToken)
+                .toHaveBeenCalledWith(validConcourseUrl, validTeam, validCredentials);
+        });
     });
     describe('loadAllAtcTokens', () => {
         it('returns all saved team, atcToken pairs for the given concourseUrl', async () => {
@@ -158,6 +177,95 @@ describe('Credential Repository 2', () => {
             expect(fs.existsSync(filename)).toBeFalsy(`test file ${filename} should not exist! delete and re-run test!`);
             const explicitlyUndefined = new CredentialRepository2(concourseResponseParser, filename);
             await explicitlyUndefined.load();
+        });
+    });
+    describe('requestAtcToken', () => {
+        it('requests a token from ${concourseUrl}/api/v1/teams/${team}/auth/token', async () => {
+            const expectedHeaders = {
+                'authorization': validCredentials
+            };
+            const scope = nock(validConcourseUrl, {reqheaders: expectedHeaders})
+                .get(`/api/v1/teams/${validTeam}/auth/token`)
+                .reply(200, 'OK', {'Set-Cookie': `ATC-Authorization="${validToken}"`});
+
+            await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
+
+            expect(scope.isDone())
+                .toBeTruthy();
+        });
+        it('stores a retrieved token', async () => {
+            const expectedHeaders = {
+                'authorization': validCredentials
+            };
+            spyOn(unitUnderTest, 'saveAtcToken')
+                .and.returnValue(Promise.resolve());
+            nock(validConcourseUrl, {reqheaders: expectedHeaders})
+                .get(`/api/v1/teams/${validTeam}/auth/token`)
+                .reply(200, 'OK', {'Set-Cookie': `ATC-Authorization="${validToken}"`});
+
+            await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
+
+            expect(unitUnderTest.saveAtcToken)
+                .toHaveBeenCalledWith(validConcourseUrl, validTeam, validToken);
+        });
+        it('does not store anything if the retrieved token is undefined', async () => {
+            const expectedHeaders = {
+                'authorization': validCredentials
+            };
+            spyOn(unitUnderTest, 'saveAtcToken')
+                .and.returnValue(Promise.resolve());
+            nock(validConcourseUrl, {reqheaders: expectedHeaders})
+                .get(`/api/v1/teams/${validTeam}/auth/token`)
+                .reply(200, 'OK');
+
+            await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
+
+            expect(unitUnderTest.saveAtcToken).toHaveBeenCalledTimes(0);
+        });
+        it('returns the retrieved token', async () => {
+            const expectedHeaders = {
+                'authorization': validCredentials
+            };
+            nock(validConcourseUrl, {reqheaders: expectedHeaders})
+                .get(`/api/v1/teams/${validTeam}/auth/token`)
+                .reply(200, 'OK', {'Set-Cookie': `ATC-Authorization="${validToken}"`});
+
+            const actualResponse = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
+
+            expect(actualResponse)
+                .toEqual(validToken);
+        });
+        it('resolves to undefined if the supplied credentials are undefined', async () => {
+            const actualResult = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, undefined)
+                .catch(e => fail(e));
+            expect(actualResult).toBeUndefined();
+        });
+        it('resolves to undefined if the GET request fails', async () => {
+            const expectedHeaders = {
+                'authorization': validCredentials
+            };
+            nock(validConcourseUrl, {reqheaders: expectedHeaders})
+                .get(`/api/v1/teams/${validTeam}/auth/token`)
+                .reply(500, 'expected error');
+
+            const actualResponse = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
+
+            expect(actualResponse).toBeUndefined();
+        });
+        it('resolves to the token if the token save operation fails', async () => {
+            const expectedHeaders = {
+                'authorization': validCredentials
+            };
+            nock(validConcourseUrl, {reqheaders: expectedHeaders})
+                .get(`/api/v1/teams/${validTeam}/auth/token`)
+                .reply(200, 'OK', {'Set-Cookie': `ATC-Authorization="${validToken}"`});
+
+            spyOn(unitUnderTest, 'saveAtcToken')
+                .and.returnValue(Promise.reject('expected rejection'));
+
+            const actualResponse = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
+
+            expect(actualResponse).toEqual(validToken);
         });
     });
 });

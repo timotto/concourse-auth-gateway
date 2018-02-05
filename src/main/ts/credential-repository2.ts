@@ -1,7 +1,7 @@
 import * as url from 'url';
 import * as fs from 'fs';
 import {Util} from "./util";
-import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
+import {ConcourseResponseParser} from "./concourse-response-parser";
 import {CoreOptions} from "request";
 
 export class CredentialRepository2 {
@@ -65,7 +65,7 @@ export class CredentialRepository2 {
             .then(credentials => this.requestAtcToken(concourseUrl, team, credentials));
     }
 
-    private requestAtcToken(concourseUrl: string, team: string, credentials: string): Promise<string|undefined> {
+    public requestAtcToken(concourseUrl: string, team: string, credentials: string): Promise<string|undefined> {
         if (credentials === undefined) return Promise.resolve(credentials);
 
         const options: CoreOptions = {headers:{'Authorization': credentials}};
@@ -73,12 +73,12 @@ export class CredentialRepository2 {
         return Util.rpGet(`${concourseUrl}/api/v1/teams/${team}/auth/token`, options)
             .then(response => this.concourseResponseParser.parseConcourseResponse(response))
             .then(parsedResponse => parsedResponse.atcToken)
-            .then(atcToken => {
-                if (atcToken === undefined) return Promise.resolve(undefined);
-
-                return this.saveAtcToken(concourseUrl, team, atcToken)
-                    .then(() => atcToken)})
-            .catch(e => undefined);
+            .then(atcToken => atcToken === undefined
+                ? Promise.resolve(undefined)
+                : this.saveAtcToken(concourseUrl, team, atcToken)
+                    .then(() => atcToken)
+                    .catch(() => atcToken))
+            .catch(() => undefined);
     }
 
     private loadFromFile(err, data) {
@@ -111,7 +111,7 @@ const assertUrl = (concourseUrl): Promise<void> => {
     catch (e) { return Promise.reject(`invalid url (${e.message}): ${concourseUrl}`); }
 
     if (parsedUrl.hostname === null)
-        return Promise.reject(`no hostname in url: ${concourseUrl}`)
+        return Promise.reject(`no hostname in url: ${concourseUrl}`);
 
     return Promise.resolve();
 };
