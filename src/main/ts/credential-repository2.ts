@@ -57,7 +57,7 @@ export class CredentialRepository2 {
         })));
     }
 
-    private assertAtcToken(concourseUrl: string, team: string, atcToken: string | undefined): Promise<string | undefined> {
+    public assertAtcToken(concourseUrl: string, team: string, atcToken: string | undefined): Promise<string | undefined> {
         if (atcToken !== undefined) return Promise.resolve(atcToken);
 
         return this.loadAuthenticationCredentials(concourseUrl, team)

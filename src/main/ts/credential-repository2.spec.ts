@@ -121,20 +121,19 @@ describe('Credential Repository 2', () => {
             const actualResult = await instance2.loadAtcToken(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validToken);
         });
-        it('calls requestAtcToken if there is no token but credentials', async () => {
-            // spy
-            spyOn(unitUnderTest, 'requestAtcToken')
-                .and.returnValue(Promise.resolve(undefined));
+        it('calls assertAtcToken on the token taken from persistent memory', async () => {
+            spyOn(unitUnderTest, 'assertAtcToken')
+                .and.returnValue(Promise.resolve());
 
             // given
-            await unitUnderTest.saveAuthenticationCredentials(validConcourseUrl, validTeam, validCredentials);
+            await unitUnderTest.saveAtcToken(validConcourseUrl, validTeam, validToken);
 
             // when
             await unitUnderTest.loadAtcToken(validConcourseUrl, validTeam);
 
             // then
-            expect(unitUnderTest.requestAtcToken)
-                .toHaveBeenCalledWith(validConcourseUrl, validTeam, validCredentials);
+            expect(unitUnderTest.assertAtcToken)
+                .toHaveBeenCalledWith(validConcourseUrl, validTeam, validToken);
         });
     });
     describe('loadAllAtcTokens', () => {
@@ -263,6 +262,48 @@ describe('Credential Repository 2', () => {
             const actualResponse = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
 
             expect(actualResponse).toEqual(validToken);
+        });
+    });
+    describe('assertAtcToken', () => {
+        it('returns the token if it is not undefined', async () => {
+            // when
+            const actualResult = await unitUnderTest.assertAtcToken(validConcourseUrl, validTeam, validToken);
+
+            // then
+            expect(actualResult).toEqual(validToken);
+        });
+        describe('with an undefined token', () => {
+            // given
+            const givenToken = undefined;
+            it('calls loadAuthenticationCredentials', async () => {
+                spyOn(unitUnderTest, 'loadAuthenticationCredentials')
+                    .and.returnValue(Promise.resolve());
+
+                // when
+                await unitUnderTest.assertAtcToken(validConcourseUrl, validTeam, givenToken);
+
+                // then
+                expect(unitUnderTest.loadAuthenticationCredentials)
+                    .toHaveBeenCalledWith(validConcourseUrl, validTeam);
+            });
+            it('calls requestAtcToken with the results of loadAuthenticationCredentials', async () => {
+                const expectedCredentials = 'expected credentials';
+
+                // fixture
+                spyOn(unitUnderTest, 'loadAuthenticationCredentials')
+                    .and.returnValue(Promise.resolve(expectedCredentials));
+
+                // spy
+                spyOn(unitUnderTest, 'requestAtcToken')
+                    .and.stub();
+
+                // when
+                await unitUnderTest.assertAtcToken(validConcourseUrl, validTeam, givenToken);
+
+                // then
+                expect(unitUnderTest.requestAtcToken)
+                    .toHaveBeenCalledWith(validConcourseUrl, validTeam, expectedCredentials);
+            });
         });
     });
 });
