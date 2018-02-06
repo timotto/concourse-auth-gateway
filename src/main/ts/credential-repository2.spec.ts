@@ -1,13 +1,14 @@
 import {CredentialRepository2} from "./credential-repository2";
 import * as fs from 'fs';
 import * as nock from 'nock';
+import * as jwt from 'jsonwebtoken';
 
 const testStateFilename = 'test-state.json';
 
 const validConcourseUrl = 'http://concourse.example.com';
 const validTeam = 'team1';
 const validCredentials = 'Basic dXNlcjpwYXNzd29yZA==';
-const validToken = 'Bearer TODO add sample JWT';
+const validToken = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjUxNzkzODMzMH0.OIJNEHFnopeC4hfalB5Z12R8MUAXmj0py4hLDGn32B8';
 
 const invalidUrlValues = [undefined, null, '', 'not-a-url'];
 const invalidTeamValues = [undefined, null, ''];
@@ -271,6 +272,43 @@ describe('Credential Repository 2', () => {
 
             // then
             expect(actualResult).toEqual(validToken);
+        });
+        it('treats the token as undefined if it is not a valid JWT Bearer token', async () => {
+            // given
+            const invalidJwtBearerToken = 'something totally different';
+
+            // when
+            const actualResult = await unitUnderTest.assertAtcToken(validConcourseUrl, validTeam, invalidJwtBearerToken);
+
+            // then
+            expect(actualResult).not.toEqual(invalidJwtBearerToken);
+        });
+        it('treats a valid JWT as undefined if it is expired', async () => {
+            // given
+            const expiredJWT = jwt.sign({
+                exp: Math.floor(Date.now() / 1000) - 1,
+                data: 'foobar'
+            }, 'secret');
+            const expiredAtcToken = `Bearer ${expiredJWT}`;
+
+            // when
+            const actualResult = await unitUnderTest.assertAtcToken(validConcourseUrl, validTeam, expiredAtcToken);
+
+            // then
+            expect(actualResult).not.toEqual(expiredAtcToken);
+        });
+        it('accepts a valid JWT without expiration date', async () => {
+            // given
+            const endlessJWT = jwt.sign({
+                data: 'foobar'
+            }, 'secret');
+            const expectedToken = `Bearer ${endlessJWT}`;
+
+            // when
+            const actualResult = await unitUnderTest.assertAtcToken(validConcourseUrl, validTeam, expectedToken);
+
+            // then
+            expect(actualResult).toEqual(expectedToken);
         });
         describe('with an undefined token', () => {
             // given

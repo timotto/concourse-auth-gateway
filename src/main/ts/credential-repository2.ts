@@ -1,5 +1,6 @@
 import * as url from 'url';
 import * as fs from 'fs';
+import * as jwt from 'jsonwebtoken';
 import {Util} from "./util";
 import {ConcourseResponseParser} from "./concourse-response-parser";
 import {CoreOptions} from "request";
@@ -58,7 +59,10 @@ export class CredentialRepository2 {
     }
 
     public assertAtcToken(concourseUrl: string, team: string, atcToken: string | undefined): Promise<string | undefined> {
-        if (atcToken !== undefined) return Promise.resolve(atcToken);
+        const parsedJwt = parseAuthorizationHeaderBearerTokenValue(atcToken);
+        const expiration = parsedJwt ? (parsedJwt as any).exp : undefined;
+        const isExpired = expiration !== undefined && expiration < (Date.now() / 1000);
+        if (parsedJwt && !isExpired && atcToken !== undefined) return Promise.resolve(atcToken);
 
         return this.loadAuthenticationCredentials(concourseUrl, team)
             .then(credentials => this.requestAtcToken(concourseUrl, team, credentials));
@@ -102,6 +106,12 @@ export class CredentialRepository2 {
             }), err => err ? reject(err) : resolve()));
     }
 }
+
+const parseAuthorizationHeaderBearerTokenValue = (atcTokenHeaderValue: string) => {
+    if (atcTokenHeaderValue === undefined) return undefined;
+    if (!atcTokenHeaderValue.startsWith('Bearer ')) return undefined;
+    return jwt.decode(atcTokenHeaderValue.substr(7));
+};
 
 const assertUrl = (concourseUrl): Promise<void> => {
     let parsedUrl: url.UrlWithStringQuery;
