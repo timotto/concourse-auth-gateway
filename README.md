@@ -1,5 +1,8 @@
 # Concourse Authenticating Gateway
 
+[![Build Status](https://travis-ci.org/timotto/concourse-auth-gateway.svg?branch=master)](https://travis-ci.org/timotto/concourse-auth-gateway)
+[![Coverage Status](https://coveralls.io/repos/github/timotto/concourse-auth-gateway/badge.svg?branch=master)](https://coveralls.io/github/timotto/concourse-auth-gateway?branch=master)
+
 This Concourse Reverse Proxy stores and injects credentials into requests forwarded to
 Concourse so that pipelines do not have to be exposed or public for a status monitor
 to display them.
