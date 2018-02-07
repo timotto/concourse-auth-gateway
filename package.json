@@ -6,6 +6,7 @@
     "cleanstart": "rm -rf dist && tsc && node dist",
     "start": "tsc && node dist",
     "test": "nyc -r lcov -e .ts -x \"**/*.spec.ts\" jasmine-ts --config=jasmine.json",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "tests": "nodemon -w src --ext ts --exec yarn run test",
     "dev": "nodemon -w src --ext ts --exec yarn run start"
   },
@@ -17,6 +18,7 @@
     "@types/request-promise": "^4.1.39",
     "@types/request-promise-native": "^1.0.10",
     "@types/supertest": "^2.0.4",
+    "coveralls": "^3.0.0",
     "jasmine": "^2.8.0",
     "jasmine-spec-reporter": "^4.2.1",
     "jasmine-ts": "^0.2.1",
