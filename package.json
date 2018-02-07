@@ -5,7 +5,7 @@
     "eslint": "eslint",
     "cleanstart": "rm -rf dist && tsc && node dist",
     "start": "tsc && node dist",
-    "test": "jasmine-ts --config=jasmine.json",
+    "test": "nyc -r lcov -e .ts -x \"**/*.spec.ts\" jasmine-ts --config=jasmine.json",
     "tests": "nodemon -w src --ext ts --exec yarn run test",
     "dev": "nodemon -w src --ext ts --exec yarn run start"
   },
@@ -24,6 +24,7 @@
     "nock": "^9.0.22",
     "node-mocks-http": "^1.6.6",
     "nodemon": "^1.12.1",
+    "nyc": "^11.4.1",
     "supertest": "^3.0.0",
     "typescript": "^2.5.2",
     "typescript-eslint-parser": "^8.0.0",
