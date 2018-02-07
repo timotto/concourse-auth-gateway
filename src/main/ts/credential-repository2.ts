@@ -82,8 +82,7 @@ export class CredentialRepository2 {
                 ? Promise.resolve(undefined)
                 : this.saveAtcToken(concourseUrl, team, atcToken)
                     .then(() => atcToken)
-                    .catch(() => atcToken))
-            .catch(() => undefined);
+                    .catch(() => atcToken));
     }
 
     private loadFromFile(err, data) {

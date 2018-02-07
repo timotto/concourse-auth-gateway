@@ -1,6 +1,7 @@
-import {ConcourseResponseParser} from "./concourse-response-parser";
+import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
 import * as request from 'request';
 import nock = require("nock");
+import {Util} from "./util";
 
 const mockConcourseUrl = 'http://mock-concourse';
 
@@ -50,6 +51,84 @@ describe('ConcourseResponseParser', () => {
                 expect(actualResponse.atcToken).toEqual(expectedAtcToken);
                 done();
             });
+        });
+    });
+});
+
+describe('ParsedConcourseResponse', () => {
+    let unitUnderTest: ParsedConcourseResponse;
+    let mockResponse: request.Response;
+    beforeEach(() => {
+        mockResponse = jasmine.createSpyObj<request.Response>('request.Response', ['nothing']);
+        unitUnderTest = new ParsedConcourseResponse(mockResponse);
+    });
+    describe('setCsrfToken', () => {
+        it('calls Util.firstHeaderValue', () => {
+            // given
+            const expectedValue = 'expected value';
+            spyOn(Util, 'firstHeaderValue')
+                .and.callThrough();
+
+            // when
+            unitUnderTest.setCsrfToken(expectedValue);
+
+            // then
+            expect(Util.firstHeaderValue)
+                .toHaveBeenCalledWith(expectedValue);
+        });
+        it('sets the csrfToken propery', () => {
+            // given
+            const expectedValue = 'expected value';
+
+            // when
+            unitUnderTest.setCsrfToken(expectedValue);
+
+            // then
+            expect(unitUnderTest.csrfToken).toEqual(expectedValue);
+        });
+    });
+    describe('setAtcToken(value)', () => {
+        it('does nothing if the value is undefined', () => {
+            const expectedValue = 'expected value';
+            // given
+            const unexpectedValue = undefined;
+            unitUnderTest.atcToken = expectedValue;
+
+            // when
+            unitUnderTest.setAtcToken(unexpectedValue);
+
+            // then
+            expect(unitUnderTest.atcToken).toEqual(expectedValue);
+        });
+        it('uses the value if it is a string', () => {
+            const expectedValue = 'expected value';
+
+            // given
+            const stringValue = `ATC-Authorization="${expectedValue}"`;
+
+            // when
+            unitUnderTest.setAtcToken(stringValue);
+
+            // then
+            expect(unitUnderTest.atcToken).toEqual(expectedValue);
+        });
+        it('uses the last valid value if the value is an array', () => {
+            const expectedValue = 'expected value';
+            const unexpectedValue = 'unexpected value';
+
+            // given
+            const arrayValue = [
+                `ATC-Authorization="${unexpectedValue}"`,
+                'unexpected',
+                'ATC-Authorization',
+                `ATC-Authorization="${expectedValue}"`
+            ];
+
+            // when
+            unitUnderTest.setAtcToken(arrayValue);
+
+            // then
+            expect(unitUnderTest.atcToken).toEqual(expectedValue);
         });
     });
 });

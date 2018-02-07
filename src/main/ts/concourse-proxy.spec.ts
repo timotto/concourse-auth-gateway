@@ -197,6 +197,56 @@ describe('ConcourseProxy', () => {
                         expect(count).toEqual(1);
                     })
             });
+            it('ignores undefined response bodies', async () => {
+                const expectedTeam1 = {team: 'team1', token: 'token 1', response: [{id:'a'},{id:'b'}]};
+                const expectedTeam2 = {team: 'team2', token: 'token 2', response: [{id:'a'},{id:'b'},{id:'c'},{id:'d'}]};
+                const expectedTeam3 = {team: 'team3', token: 'token 3', response: undefined};
+                const expectedTeams = [expectedTeam1, expectedTeam2, expectedTeam3];
+                spyOn(credentialRepository2, 'loadAllAtcTokens')
+                    .and.returnValue(Promise.resolve(expectedTeams));
+
+                mockRequest.request.url = '/api/v1/pipelines';
+                const scope = nock(mockConcourseUrl);
+                expectedTeams.forEach(team =>
+                    scope.get(mockRequest.request.url, undefined, {reqheaders: {'Cookie':`ATC-Authorization="${team.token}"`}})
+                        .reply(200, team.response));
+
+                scope.get(mockRequest.request.url)
+                    .reply(200, []);
+
+                const actualResponse = await unitUnderTest.proxyRequest(mockRequest);
+
+                expectedTeams
+                    .map(team => team.response)
+                    .reduce((a,b) => a.concat(...b===undefined?[]:b), [])
+                    .forEach(x => {
+                        const parsedBody = JSON.parse(actualResponse.response.body);
+                        const count = parsedBody.filter(item => item.id === x.id).length;
+
+                        expect(count).toEqual(1);
+                    })
+            });
+        });
+        it('goes on without ATC bearer token if the load operation was rejected', async () => {
+            const expectedResponse = 'OK';
+            // stub
+            nock(mockConcourseUrl)
+                .get('/')
+                .reply(200, expectedResponse);
+
+            // spy
+            spyOn(credentialRepository2, 'loadAtcToken')
+                .and.returnValue(Promise.reject('should have been ignored'));
+
+            // given
+            mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);
+            mockRequest.request.url = '/';
+
+            // when
+            const actualResponse = await unitUnderTest.proxyRequest(mockRequest);
+
+            // then
+            expect(actualResponse.response.body).toEqual(expectedResponse);
         });
     });
 });

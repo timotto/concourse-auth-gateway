@@ -254,11 +254,13 @@ describe('Credential Repository 2', () => {
                 .get(`/api/v1/teams/${validTeam}/auth/token`)
                 .reply(200, 'OK', {'Set-Cookie': `ATC-Authorization="${validToken}"`});
 
-            spyOn(fs, 'readFile')
-                .and.callFake((filename, cb) => cb('expected error'));
+            spyOn(fs, 'writeFile')
+                .and.callFake((filename, data, cb) => cb('expected error'));
 
+            (unitUnderTest as any).stateFilename = 'not undefined';
             const actualResponse = await unitUnderTest.requestAtcToken(validConcourseUrl, validTeam, validCredentials);
 
+            expect(fs.writeFile).toHaveBeenCalled();
             expect(actualResponse).toEqual(validToken);
         });
     });

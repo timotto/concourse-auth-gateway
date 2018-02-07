@@ -1,4 +1,5 @@
 import * as request from 'request';
+import {Util} from "./util";
 export class ConcourseResponseParser {
     public static parseConcourseResponse(response: request.Response): Promise<ParsedConcourseResponse> {
         const parsedResponse = new ParsedConcourseResponse(response);
@@ -16,14 +17,7 @@ export class ParsedConcourseResponse {
     }
 
     setCsrfToken(csrfTokenHeaderValue: string | string[] | undefined) {
-        if (csrfTokenHeaderValue === undefined) return;
-        if (typeof csrfTokenHeaderValue === 'string') {
-            this.csrfToken = csrfTokenHeaderValue;
-            return;
-        }
-        this.csrfToken = csrfTokenHeaderValue
-            .filter(value => value !== undefined && value !== null && value !== '')
-            .reduce((a,b) => b);
+        this.csrfToken = Util.firstHeaderValue(csrfTokenHeaderValue);
     }
 
     setAtcToken(setCookieHeaderValue: string | string[] | undefined) {

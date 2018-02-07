@@ -31,10 +31,13 @@ export class ConcourseProxy {
     }
 
     private static mergeResponseBodies(a: request.Response, b: request.Response): request.Response {
-        if (a === undefined) return b;
-        if (b === undefined) return a;
 
-        a.body = JSON.stringify(Util.uniqueById(JSON.parse(a.body), JSON.parse(b.body)));
+        const parsedBodyA = JSON.parse(a.body);
+        let parsedBodyB: any;
+        try { parsedBodyB = JSON.parse(b.body); }
+        catch (e) { parsedBodyB = []; }
+
+        a.body = JSON.stringify(Util.uniqueById(parsedBodyA, parsedBodyB));
 
         return a;
     }
