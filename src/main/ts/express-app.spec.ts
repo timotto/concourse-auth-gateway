@@ -1,5 +1,4 @@
 import * as express from 'express';
-import {Router} from 'express';
 import {ExpressApp} from "./express-app";
 import {HealthEndpoint} from "./health-endpoint";
 
@@ -9,7 +8,7 @@ describe('ExpressApp', () => {
         delete process.env.PORT;
         const app = express();
         spyOn(app, 'set').and.stub();
-        new ExpressApp(app, Router);
+        new ExpressApp(app);
         expect(app.set).toHaveBeenCalledWith('port', 3001);
     });
 
@@ -17,14 +16,14 @@ describe('ExpressApp', () => {
         process.env.PORT = (Math.random() * 65535).toString();
         const app = express();
         spyOn(app, 'set').and.stub();
-        new ExpressApp(app, Router);
+        new ExpressApp(app);
         expect(app.set).toHaveBeenCalledWith('port', process.env.PORT);
     });
 
     it('registers the HealthEndpoint on /healthz', () => {
         const app = express();
         const spy = spyOn(ExpressApp.prototype, 'registerEndpoint').and.stub();
-        new ExpressApp(app, Router);
+        new ExpressApp(app);
         expect(spy).toHaveBeenCalledWith('/healthz', HealthEndpoint);
     });
 });

@@ -1,4 +1,3 @@
-import {Router} from "express";
 import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import {CredentialRepository2} from "./credential-repository2";
@@ -6,7 +5,7 @@ import {ConcourseProxy} from "./concourse-proxy";
 import {JsonLogger} from "./json-logger";
 
 export class ExpressApp {
-    constructor(readonly app, private router: () => Router) {
+    constructor(readonly app) {
         app.set("port", process.env.PORT || 3001);
         this.registerEndpoint('/healthz', HealthEndpoint);
 
@@ -15,8 +14,7 @@ export class ExpressApp {
         const concourseProxy = new ConcourseProxy(credentialRepository2);
         const concourseEndpoint2 = new ConcourseEndpoint2(
             credentialRepository2,
-            concourseProxy,
-            this.router());
+            concourseProxy);
 
         credentialRepository2.load().catch(error => JsonLogger.log('error', error));
 
@@ -24,7 +22,7 @@ export class ExpressApp {
     }
 
     public registerEndpoint(path, endpoint) {
-        this.app.use(path, new endpoint(this.router()).router);
+        this.app.use(path, new endpoint().router);
     }
 
 }

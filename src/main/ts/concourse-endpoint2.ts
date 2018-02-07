@@ -6,11 +6,12 @@ import {CredentialRepository2} from "./credential-repository2";
 
 export class ConcourseEndpoint2 {
 
-    constructor(private credentialRepository: CredentialRepository2,
-                private concourseProxy: ConcourseProxy,
-                readonly router: Router){
+    readonly router: Router = Router();
 
-        router.get('*', this.handleRequest.bind(this));
+    constructor(private credentialRepository: CredentialRepository2,
+                private concourseProxy: ConcourseProxy){
+
+        this.router.get('*', this.handleRequest.bind(this));
     }
 
     public handleRequest(req: Request, res: Response): Promise<Response> {

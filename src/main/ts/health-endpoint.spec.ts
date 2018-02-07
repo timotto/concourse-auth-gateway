@@ -1,13 +1,12 @@
 import {HealthEndpoint} from "./health-endpoint";
 import * as express from 'express';
-import {Router} from 'express';
 import * as request from 'supertest';
 
 describe('HealthEndpoint', () => {
     let mockApp;
     let unitUnderTest: HealthEndpoint;
     beforeEach(() => {
-        unitUnderTest = new HealthEndpoint(Router());
+        unitUnderTest = new HealthEndpoint();
         mockApp = express();
         mockApp.use('/', unitUnderTest.router);
     });

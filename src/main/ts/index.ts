@@ -1,13 +1,12 @@
 import * as express from "express";
 import * as bodyParser from 'body-parser';
-import {Router} from 'express';
 import {JsonLogger} from "./json-logger";
 import {ExpressApp} from "./express-app";
 
 const app = express();
 app.use(bodyParser.json());
 
-new ExpressApp(app, Router);
+new ExpressApp(app);
 
 app.listen(app.get("port"), () =>
     JsonLogger.log('online', {

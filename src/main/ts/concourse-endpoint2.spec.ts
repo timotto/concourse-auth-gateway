@@ -2,7 +2,7 @@ import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import {CredentialRepository2} from "./credential-repository2";
 import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseProxy} from "./concourse-proxy";
-import {Router, Request, Response} from 'express';
+import {Request, Response} from 'express';
 import * as nock from "nock";
 import {ParsedConcourseResponse} from "./concourse-response-parser";
 
@@ -13,15 +13,13 @@ describe('Concourse Endpoint 2', () => {
     let unitUnderTest: ConcourseEndpoint2;
     let credentialRepository2: CredentialRepository2;
     let concourseProxy: ConcourseProxy;
-    let mockRouter: Router;
 
     let mockResponse: Response;
     let mockRequest: any;
     beforeEach(() => {
         credentialRepository2 = new CredentialRepository2();
         concourseProxy = new ConcourseProxy(credentialRepository2);
-        mockRouter = jasmine.createSpyObj<Router>('Router', ['get']);
-        unitUnderTest = new ConcourseEndpoint2(credentialRepository2, concourseProxy, mockRouter);
+        unitUnderTest = new ConcourseEndpoint2(credentialRepository2, concourseProxy);
 
         mockResponse = jasmine.createSpyObj<Response>('Response', ['status', 'send', 'contentType']);
         (mockResponse.status as jasmine.Spy).and.returnValue(mockResponse);
