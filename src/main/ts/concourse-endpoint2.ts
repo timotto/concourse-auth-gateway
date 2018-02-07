@@ -1,9 +1,11 @@
+import {Service} from "typedi";
 import {Router, Request, Response} from 'express';
 import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseProxy} from "./concourse-proxy";
 import {ParsedConcourseResponse} from "./concourse-response-parser";
 import {CredentialRepository2} from "./credential-repository2";
 
+@Service()
 export class ConcourseEndpoint2 {
 
     readonly router: Router = Router();

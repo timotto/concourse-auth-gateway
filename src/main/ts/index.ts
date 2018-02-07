@@ -1,14 +1,12 @@
-import * as express from "express";
-import * as bodyParser from 'body-parser';
-import {JsonLogger} from "./json-logger";
+import {Container} from "typedi";
+import "reflect-metadata";
 import {ExpressApp} from "./express-app";
+import {JsonLogger} from "./json-logger";
 
-const app = express();
-app.use(bodyParser.json());
+Container.set('port', parseInt(process.env.PORT || '3001'));
+Container.set('stateFilename', process.env.STATE_FILENAME || 'credentials.json');
 
-new ExpressApp(app);
-
-app.listen(app.get("port"), () =>
-    JsonLogger.log('online', {
-        port: app.get("port"),
-        env: app.get("env")}));
+Container
+    .get(ExpressApp)
+    .start()
+    .catch(error => JsonLogger.log('error', error));

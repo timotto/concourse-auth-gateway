@@ -1,3 +1,4 @@
+import {Inject, Service} from "typedi";
 import * as url from 'url';
 import * as fs from 'fs';
 import * as jwt from 'jsonwebtoken';
@@ -5,13 +6,14 @@ import {Util} from "./util";
 import {ConcourseResponseParser} from "./concourse-response-parser";
 import {CoreOptions} from "request";
 
+@Service()
 export class CredentialRepository2 {
 
     private authenticationCredentials = {};
 
     private atcTokens = {};
 
-    constructor(private stateFilename?: string) {}
+    constructor(@Inject("stateFilename") private stateFilename: string) {}
 
     public saveAuthenticationCredentials(concourseUrl: string, team: string, credentials: string): Promise<void> {
         return assertUrl(concourseUrl)

@@ -18,7 +18,7 @@ const invalidTokenValues = [undefined, null, ''];
 describe('Credential Repository 2', () => {
     let unitUnderTest: CredentialRepository2;
     beforeEach(async () => {
-        unitUnderTest = new CredentialRepository2();
+        unitUnderTest = new CredentialRepository2(undefined);
         await unitUnderTest.load();
     });
     afterEach(done => {
@@ -165,9 +165,6 @@ describe('Credential Repository 2', () => {
         it('does nothing if the stateFilename property is undefined', async () => {
             const explicitlyUndefined = new CredentialRepository2(undefined);
             await explicitlyUndefined.load();
-
-            const implicitlyUndefined = new CredentialRepository2();
-            await implicitlyUndefined.load();
         });
         it('does nothing if the file specified by stateFilename property does not exist', async () => {
             const filename = 'non-existing-file';

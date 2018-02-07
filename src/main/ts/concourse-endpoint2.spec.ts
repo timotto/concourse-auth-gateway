@@ -17,7 +17,7 @@ describe('Concourse Endpoint 2', () => {
     let mockResponse: Response;
     let mockRequest: any;
     beforeEach(() => {
-        credentialRepository2 = new CredentialRepository2();
+        credentialRepository2 = new CredentialRepository2(undefined);
         concourseProxy = new ConcourseProxy(credentialRepository2);
         unitUnderTest = new ConcourseEndpoint2(credentialRepository2, concourseProxy);
 

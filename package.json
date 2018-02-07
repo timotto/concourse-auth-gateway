@@ -33,9 +33,11 @@
     "express": "^4.15.5",
     "jsonwebtoken": "^8.1.1",
     "querystring": "^0.2.0",
+    "reflect-metadata": "^0.1.12",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "typedi": "^0.6.1"
   },
   "license": "Apache-2.0"
 }

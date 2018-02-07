@@ -13,7 +13,7 @@ describe('ConcourseProxy', () => {
     let credentialRepository2: CredentialRepository2;
     let mockRequest: ParsedConcourseRequest;
     beforeEach(() => {
-        credentialRepository2 = new CredentialRepository2();
+        credentialRepository2 = new CredentialRepository2(undefined);
         unitUnderTest = new ConcourseProxy(credentialRepository2);
         mockRequest = new ParsedConcourseRequest(undefined, mockConcourseUrl, mockTeam, undefined);
         mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);

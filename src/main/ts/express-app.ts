@@ -1,28 +1,40 @@
+import {Service, Inject} from "typedi";
+import * as express from 'express';
+import * as bodyParser from 'body-parser';
+import {Express} from 'express';
 import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import {CredentialRepository2} from "./credential-repository2";
 import {ConcourseProxy} from "./concourse-proxy";
-import {JsonLogger} from "./json-logger";
 
+@Service()
 export class ExpressApp {
-    constructor(readonly app) {
-        app.set("port", process.env.PORT || 3001);
-        this.registerEndpoint('/healthz', HealthEndpoint);
 
-        const stateFilename = process.env.STATE_FILENAME || 'credentials.json';
-        const credentialRepository2 = new CredentialRepository2(stateFilename);
-        const concourseProxy = new ConcourseProxy(credentialRepository2);
-        const concourseEndpoint2 = new ConcourseEndpoint2(
-            credentialRepository2,
-            concourseProxy);
+    private app: Express = express();
 
-        credentialRepository2.load().catch(error => JsonLogger.log('error', error));
-
-        app.use("/", concourseEndpoint2.router);
+    constructor(private credentialRepository2: CredentialRepository2,
+                private concourseProxy: ConcourseProxy,
+                private concourseEndpoint2: ConcourseEndpoint2,
+                private healthEndpoint: HealthEndpoint,
+                @Inject('port') private port: number) {
     }
 
-    public registerEndpoint(path, endpoint) {
-        this.app.use(path, new endpoint().router);
+    public start(): Promise<void> {
+        return this.credentialRepository2
+            .load()
+            .then(() => this.useApp())
+            .then(() => this.listen());
     }
 
+    private useApp(): Promise<void> {
+        this.app.use(bodyParser.json());
+        this.app.use("/", this.concourseEndpoint2.router);
+        this.app.use("/healthz", this.healthEndpoint.router);
+
+        return Promise.resolve();
+    }
+
+    private listen(): Promise<void> {
+        return new Promise<void>((resolve => this.app.listen(this.port, () => resolve())));
+    }
 }

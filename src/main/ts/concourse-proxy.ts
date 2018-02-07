@@ -1,3 +1,4 @@
+import {Service} from "typedi";
 import * as request from 'request';
 import {ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
@@ -5,6 +6,7 @@ import {CredentialRepository2} from "./credential-repository2";
 import {Util} from "./util";
 import {CoreOptions} from "request";
 
+@Service()
 export class ConcourseProxy {
 
     constructor(private credentialRepository: CredentialRepository2) {
