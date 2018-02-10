@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as jwt from 'jsonwebtoken';
 import {Util} from "./util";
 import {ConcourseResponseParser} from "./concourse-response-parser";
-import {CoreOptions} from "request";
 
 @Service()
 export class CredentialRepository2 {
@@ -73,7 +72,7 @@ export class CredentialRepository2 {
     public requestAtcToken(concourseUrl: string, team: string, credentials: string): Promise<string|undefined> {
         if (credentials === undefined) return Promise.resolve(credentials);
 
-        const options: CoreOptions = {headers:{'Authorization': credentials}};
+        const options: any = {'Authorization': credentials};
 
         return Util.rpGet(`${concourseUrl}/api/v1/teams/${team}/auth/token`, options)
             .then(response => ConcourseResponseParser.parseConcourseResponse(response))

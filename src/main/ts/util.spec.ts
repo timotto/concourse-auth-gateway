@@ -1,5 +1,4 @@
 import {Util} from "./util";
-import {CoreOptions} from "request";
 import * as request from 'request';
 import any = jasmine.any;
 
@@ -25,30 +24,60 @@ describe('Util', () => {
         });
     });
     describe('rpGet', () => {
-        it('calls request.get with the given arguments', async () => {
-            const expectedUrl = 'expected url';
-            const definedOptions: CoreOptions = {headers: {'some':'header'}};
-            let expectedOptions;
+        it('calls request.get with proper CoreOptions if headers are defined', async () => {
+            const definedUrl = 'defined url';
             spyOn(request, 'get')
                 .and.callFake((url,o,cb) => cb());
 
             // given
-            expectedOptions = undefined;
+            const givenHeaders: any = {'some':'header'};
 
             // when
-            await Util.rpGet(expectedUrl, expectedOptions);
+            await Util.rpGet(definedUrl, givenHeaders);
 
             // then
-            expect(request.get).toHaveBeenCalledWith(expectedUrl, expectedOptions, any(Function));
+            expect(request.get).toHaveBeenCalledWith(definedUrl, {headers: givenHeaders}, any(Function));
+        });
+        it('calls request.get with undefined CoreOptions if no headers are defined', async () => {
+            const definedUrl = 'defined url';
+            spyOn(request, 'get')
+                .and.callFake((url,o,cb) => cb());
 
             // given
-            expectedOptions = definedOptions;
+            const givenHeaders: any = undefined;
 
             // when
-            await Util.rpGet(expectedUrl, expectedOptions);
+            await Util.rpGet(definedUrl, givenHeaders);
 
             // then
-            expect(request.get).toHaveBeenCalledWith(expectedUrl, expectedOptions, any(Function));
+            expect(request.get).toHaveBeenCalledWith(definedUrl, undefined, any(Function));
+        });
+        it('calls request.get with the given arguments', async () => {
+            const expectedUrl = 'expected url';
+            const definedHeaders: any = {'some':'header'};
+            let expectedHeaders;
+            spyOn(request, 'get')
+                .and.callFake((url,o,cb) => cb());
+
+            // given
+            expectedHeaders = undefined;
+
+            // when
+            await Util.rpGet(expectedUrl, undefined);
+
+            // then
+            expect(request.get).toHaveBeenCalledWith(expectedUrl, expectedHeaders, any(Function));
+
+            (request.get as jasmine.Spy).calls.reset();
+
+            // given
+            expectedHeaders = definedHeaders;
+
+            // when
+            await Util.rpGet(expectedUrl, definedHeaders);
+
+            // then
+            expect(request.get).toHaveBeenCalledWith(expectedUrl, {headers: expectedHeaders}, any(Function));
         });
         it('resolves the promise with the response of the request', async () => {
             // given

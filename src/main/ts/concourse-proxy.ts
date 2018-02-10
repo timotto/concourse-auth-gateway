@@ -4,7 +4,6 @@ import {ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
 import {CredentialRepository2} from "./credential-repository2";
 import {Util} from "./util";
-import {CoreOptions} from "request";
 
 @Service()
 export class ConcourseProxy {
@@ -22,7 +21,7 @@ export class ConcourseProxy {
     private proxyPipelinesRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
         return this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
             .then(tokens => tokens.concat([{token: undefined}])
-                .map(pair => ConcourseProxy.createOptions(req, pair.token))
+                .map(pair => ConcourseProxy.createHeaders(req, pair.token))
                 .map(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options)))
             .then(promises => Promise.all(promises))
             .then(responses => responses.reduce(ConcourseProxy.mergeResponseBodies))
@@ -45,24 +44,24 @@ export class ConcourseProxy {
     private proxyGenericRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
         return this.credentialRepository.loadAtcToken(req.concourseUrl, req.team)
             .catch(() => undefined) // missing token is no error
-            .then(atcToken => ConcourseProxy.createOptions(req, atcToken))
+            .then(atcToken => ConcourseProxy.createHeaders(req, atcToken))
             .then(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options))
             .then(response => ConcourseResponseParser.parseConcourseResponse(response))
             .then(parsedConcourseResponse => this.saveBearerToken(req, parsedConcourseResponse))
     }
 
-    private static createOptions(req: ParsedConcourseRequest, atcToken: string): CoreOptions {
-        const options = {headers:{}};
+    private static createHeaders(req: ParsedConcourseRequest, atcToken: string): any {
+        const headers = {};
         if (req.isAuthenticationRequest) {
-            options.headers['Authorization'] = req.authorizationHeaderValue;
+            headers['Authorization'] = req.authorizationHeaderValue;
         }
         if (atcToken !== undefined) {
-            options.headers['Cookie'] = `ATC-Authorization="${atcToken}"`;
+            headers['Cookie'] = `ATC-Authorization="${atcToken}"`;
         }
         if (req.ifModifiedSinceHeaderValue) {
-            options.headers['If-Modified-Since'] = req.ifModifiedSinceHeaderValue;
+            headers['If-Modified-Since'] = req.ifModifiedSinceHeaderValue;
         }
-        return options;
+        return headers;
     }
 
     private saveBearerToken(request: ParsedConcourseRequest, parsedConcourseResponse: ParsedConcourseResponse): Promise<ParsedConcourseResponse> {
