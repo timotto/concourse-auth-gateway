@@ -4,6 +4,7 @@ import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-reques
 import {ConcourseProxy} from "./concourse-proxy";
 import {ParsedConcourseResponse} from "./concourse-response-parser";
 import {CredentialRepository2} from "./credential-repository2";
+import {Util} from "./util";
 
 @Service()
 export class ConcourseEndpoint2 {
@@ -41,12 +42,22 @@ export class ConcourseEndpoint2 {
         }
         res.statusCode = parsedConcourseResponse.response.statusCode;
         res.statusMessage = parsedConcourseResponse.response.statusMessage;
-        res.contentType(parsedConcourseResponse.response.headers['content-type']);
-        if(parsedConcourseResponse.response.headers['date'])
-            res.header('Date', parsedConcourseResponse.response.headers['date']);
-        if(parsedConcourseResponse.response.headers['last-modified'])
-            res.header('Last-Modified', parsedConcourseResponse.response.headers['last-modified']);
+        LEGAL_HEADERS.forEach(key =>
+            this.copyHeaderValue(parsedConcourseResponse, res, key));
         res.send(parsedConcourseResponse.response.body);
         return Promise.resolve(res);
     }
+
+    private static copyHeaderValue(parsedConcourseResponse: ParsedConcourseResponse,
+                                   res: Response,
+                                   key: string) {
+        const lowerCaseKey = key.toLocaleLowerCase();
+
+        const headerValue = Util.firstHeaderValue(
+            parsedConcourseResponse.response.headers[lowerCaseKey]);
+
+        if (headerValue) res.header(key, headerValue);
+    }
 }
+
+const LEGAL_HEADERS: string[] = ['Content-Type', 'Date', 'Last-Modified'];

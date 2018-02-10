@@ -176,7 +176,7 @@ describe('Concourse Endpoint 2', () => {
             await unitUnderTest.handleRequest(requestStub, responseSpy);
 
             expect(responseSpy.statusCode).toEqual(expectedStatusCode);
-            expect(responseSpy.contentType).toHaveBeenCalledWith(expectedContentType);
+            expect(responseSpy.header).toHaveBeenCalledWith('Content-Type', expectedContentType);
             expect(responseSpy.header).toHaveBeenCalledWith('Date', expectedDate);
             expect(responseSpy.header).toHaveBeenCalledWith('Last-Modified', expectedLastModified);
             expect(responseSpy.send).toHaveBeenCalledWith(expectedResponseBody);
@@ -192,8 +192,6 @@ describe('Concourse Endpoint 2', () => {
             await unitUnderTest.handleRequest(requestStub, responseSpy);
 
             expect(responseSpy.statusCode).toEqual(expectedStatusCode);
-            expect(responseSpy.contentType).toHaveBeenCalledWith(undefined);
-            expect(responseSpy.header).toHaveBeenCalledTimes(0);
             expect(responseSpy.header).toHaveBeenCalledTimes(0);
             expect(responseSpy.send).toHaveBeenCalledWith(expectedResponseBody);
         });
