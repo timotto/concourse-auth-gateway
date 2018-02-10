@@ -57,6 +57,20 @@ describe('ConcourseRequestParser', () => {
             request.url = `/api/v1/teams/${expectedTeam}/something`;
             expect(ConcourseRequestParser.parseRequest(request).authorizationHeaderValue).toEqual(expectedAuthorizationValue);
         });
+        it('fills the ifModifiedSinceHeaderValue of the response if a matching HTTP header value is found in the request', () => {
+            const expectedConcourseUrl = 'http://expected-concourse.example.com';
+            const expectedTeam = 'team-expected';
+            const expectedIfModifiedSinceValue = 'expected value';
+            const request: Request = jasmine.createSpyObj<Request>("Request", ['headers', 'url']);
+
+            request.headers = {
+                'x-concourse-url': expectedConcourseUrl,
+                'if-modified-since': expectedIfModifiedSinceValue
+            };
+
+            request.url = `/api/v1/teams/${expectedTeam}/something`;
+            expect(ConcourseRequestParser.parseRequest(request).ifModifiedSinceHeaderValue).toEqual(expectedIfModifiedSinceValue);
+        });
         it('always uses the CONCOURSE_URL environment variable value as concourseUrl if defined', () => {
             const expectedConcourseUrl = 'http://expected-concourse.example.com';
             const unexpectedConcourseUrl = 'http://unexpected-concourse.example.com';

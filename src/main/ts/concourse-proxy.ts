@@ -59,6 +59,9 @@ export class ConcourseProxy {
         if (atcToken !== undefined) {
             options.headers['Cookie'] = `ATC-Authorization="${atcToken}"`;
         }
+        if (req.ifModifiedSinceHeaderValue) {
+            options.headers['If-Modified-Since'] = req.ifModifiedSinceHeaderValue;
+        }
         return options;
     }
 

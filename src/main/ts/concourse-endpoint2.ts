@@ -42,6 +42,10 @@ export class ConcourseEndpoint2 {
         res.statusCode = parsedConcourseResponse.response.statusCode;
         res.statusMessage = parsedConcourseResponse.response.statusMessage;
         res.contentType(parsedConcourseResponse.response.headers['content-type']);
+        if(parsedConcourseResponse.response.headers['date'])
+            res.header('Date', parsedConcourseResponse.response.headers['date']);
+        if(parsedConcourseResponse.response.headers['last-modified'])
+            res.header('Last-Modified', parsedConcourseResponse.response.headers['last-modified']);
         res.send(parsedConcourseResponse.response.body);
         return Promise.resolve(res);
     }

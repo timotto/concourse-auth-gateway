@@ -10,11 +10,14 @@ export class ConcourseRequestParser {
         const team = teamUrl ? teamUrl[1] : undefined;
         const authorizationHeaderValue = Util.firstHeaderValue(req.headers['authorization']);
 
-        return new ParsedConcourseRequest(req, concourseUrl, team, authorizationHeaderValue);
+        const parsedConcourseRequest = new ParsedConcourseRequest(req, concourseUrl, team, authorizationHeaderValue);
+        parsedConcourseRequest.ifModifiedSinceHeaderValue = Util.firstHeaderValue(req.headers['if-modified-since']);
+        return parsedConcourseRequest;
     }
 }
 
 export class ParsedConcourseRequest {
+    public ifModifiedSinceHeaderValue: string;
     constructor(public request: Request,
                 public concourseUrl: string,
                 public team: string,

@@ -150,7 +150,7 @@ describe('Concourse Endpoint 2', () => {
 
             expect(responseSpy.header).toHaveBeenCalledWith('X-Csrf-Token', expectedCsrfToken);
         });
-        it('forwards status code, status message, content type, and response body', async () => {
+        it('forwards status code and message, content type, date, and last-modified headers, and response body', async () => {
             const requestStub = jasmine.createSpyObj<Request>('Request', ['headers', 'url']);
             (requestStub as any)['headers'] ={'x-concourse-url': mockConcourseUrl};
             (requestStub as any)['url'] = `/api/v1/teams/${mockTeam}/auth/token`;
@@ -162,15 +162,39 @@ describe('Concourse Endpoint 2', () => {
             const expectedStatusCode = 201;
             const expectedResponseBody = 'response body';
             const expectedContentType = 'text/expected';
+            const expectedDate = 'expected date';
+            const expectedLastModified = 'last modified';
 
             nock(mockConcourseUrl)
                 .get(requestStub.url)
-                .reply(expectedStatusCode, expectedResponseBody, {'content-type': expectedContentType});
+                .reply(expectedStatusCode, expectedResponseBody, {
+                    'content-type': expectedContentType,
+                    'date': expectedDate,
+                    'last-modified': expectedLastModified
+                });
 
             await unitUnderTest.handleRequest(requestStub, responseSpy);
 
             expect(responseSpy.statusCode).toEqual(expectedStatusCode);
             expect(responseSpy.contentType).toHaveBeenCalledWith(expectedContentType);
+            expect(responseSpy.header).toHaveBeenCalledWith('Date', expectedDate);
+            expect(responseSpy.header).toHaveBeenCalledWith('Last-Modified', expectedLastModified);
+            expect(responseSpy.send).toHaveBeenCalledWith(expectedResponseBody);
+
+            responseSpy.contentType.calls.reset();
+            responseSpy.header.calls.reset();
+            responseSpy.send.calls.reset();
+
+            nock(mockConcourseUrl)
+                .get(requestStub.url)
+                .reply(expectedStatusCode, expectedResponseBody);
+
+            await unitUnderTest.handleRequest(requestStub, responseSpy);
+
+            expect(responseSpy.statusCode).toEqual(expectedStatusCode);
+            expect(responseSpy.contentType).toHaveBeenCalledWith(undefined);
+            expect(responseSpy.header).toHaveBeenCalledTimes(0);
+            expect(responseSpy.header).toHaveBeenCalledTimes(0);
             expect(responseSpy.send).toHaveBeenCalledWith(expectedResponseBody);
         });
         it('responds with a 400 bad request error if the X-Concourse-Url HTTP header is missing', async () => {

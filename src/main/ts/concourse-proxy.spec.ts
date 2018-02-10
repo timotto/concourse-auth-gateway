@@ -89,6 +89,33 @@ describe('ConcourseProxy', () => {
             // then
             expect(scope.isDone()).toBeTruthy();
         });
+        it('forwards the If-Modified-Since header value if the original request contained one', async () => {
+            const expectedIfModifiedSinceValue = 'expected value';
+            const expectedPath = `/api/v1/teams/${mockTeam}/pipelines`;
+
+            const scope = nock(mockConcourseUrl, {
+                reqheaders: {
+                    'if-modified-since': expectedIfModifiedSinceValue
+                }
+            })
+                .get(expectedPath)
+                .reply(200, 'OK');
+            spyOn(credentialRepository2, 'loadAtcToken')
+                .and.returnValue(Promise.resolve(undefined));
+
+            // given
+            mockRequest.ifModifiedSinceHeaderValue = expectedIfModifiedSinceValue;
+            mockRequest.request.url = expectedPath;
+            mockRequest.request.headers = {
+                'if-modified-since': expectedIfModifiedSinceValue
+            };
+
+            // when
+            await unitUnderTest.proxyRequest(mockRequest);
+
+            // then
+            expect(scope.isDone()).toBeTruthy();
+        });
         it('sets the ATC-Authorization Cookie if an ATC token was found in the CredentialRepository2', async () => {
             const expectedPath = `/api/v1/teams/${mockTeam}/pipelines`;
             const validToken = 'Bearer token';
