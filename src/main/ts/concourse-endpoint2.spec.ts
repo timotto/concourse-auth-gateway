@@ -71,6 +71,26 @@ describe('Concourse Endpoint 2', () => {
             expect(credentialRepository2.saveAuthenticationCredentials)
                 .toHaveBeenCalledWith(mockConcourseUrl, mockTeam, expectedAuthenticationValue);
         });
+        it('rejects the promise if saving the credentials fails', async () => {
+            const expectedReason = 'expected reason';
+            // stub
+            spyOn(credentialRepository2, 'saveAuthenticationCredentials')
+                .and.returnValue(Promise.reject(expectedReason));
+            spyOn(concourseProxy, 'proxyRequest')
+                .and.returnValue(Promise.resolve(mockParsedResponse));
+
+            // given
+            const expectedAuthenticationValue = 'Basic dXNlcjpwYXNzd29yZA==';
+            spyOn(ConcourseRequestParser, 'parseRequest')
+                .and.returnValue(new ParsedConcourseRequest(mockRequest, mockConcourseUrl, mockTeam, expectedAuthenticationValue));
+
+            // when
+            await unitUnderTest.handleRequest(mockRequest, mockResponse);
+
+            // then
+            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.send).toHaveBeenCalledWith(expectedReason);
+        });
         it('calls the ConcourseProxy.proxyRequest function with ConcourseRequestParse.parseRequest result', async () => {
             // spy
             spyOn(concourseProxy, 'proxyRequest')
@@ -102,7 +122,7 @@ describe('Concourse Endpoint 2', () => {
             // given
             const expectedMessage = 'expected message';
             spyOn(concourseProxy, 'proxyRequest')
-                .and.returnValue(Promise.reject({message: expectedMessage}));
+                .and.returnValue(Promise.reject(expectedMessage));
 
             // when
             await unitUnderTest.handleRequest(mockRequest, responseSpy);

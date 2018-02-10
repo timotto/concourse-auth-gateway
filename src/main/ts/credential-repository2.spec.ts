@@ -172,6 +172,57 @@ describe('Credential Repository 2', () => {
             const explicitlyUndefined = new CredentialRepository2(filename);
             await explicitlyUndefined.load();
         });
+        it('does nothing if the file content is invalid', async () => {
+            // given
+            const invalidFileContent = 'not even a JSON string';
+            (unitUnderTest as any).stateFilename = 'not undefined';
+            spyOn(fs, 'readFile')
+                .and.callFake((fileName, options, cb) => cb(undefined, invalidFileContent));
+
+            // when
+            await unitUnderTest.load()
+                // then
+                .catch(e => fail(e));
+        });
+        it('does not overwrite the authenticationCredentials if they are undefined in the file content', async () => {
+            // stub
+            (unitUnderTest as any).stateFilename = 'not undefined';
+
+            // given
+            (unitUnderTest as any).authenticationCredentials = {'expected': 'state'};
+            const undefinedAuthenticationCredentials = JSON.stringify({
+                authenticationCredentials: undefined
+            });
+            spyOn(fs, 'readFile')
+                .and.callFake((fileName, options, cb) => cb(undefined, undefinedAuthenticationCredentials));
+
+            // when
+            await unitUnderTest.load();
+
+            // then
+            expect((unitUnderTest as any).authenticationCredentials)
+                .toEqual({'expected':'state'});
+        });
+        it('does not overwrite the atcTokens if they are undefined in the file content', async () => {
+            // stub
+            (unitUnderTest as any).stateFilename = 'not undefined';
+
+            // given
+            (unitUnderTest as any).atcTokens = {'expected': 'state'};
+
+            const undefinedAtcTokens = JSON.stringify({
+                atcTokens: undefined
+            });
+            spyOn(fs, 'readFile')
+                .and.callFake((fileName, options, cb) => cb(undefined, undefinedAtcTokens));
+
+            // when
+            await unitUnderTest.load();
+
+            // then
+            expect((unitUnderTest as any).atcTokens)
+                .toEqual({'expected':'state'});
+        });
     });
     describe('requestAtcToken', () => {
         it('requests a token from ${concourseUrl}/api/v1/teams/${team}/auth/token', async () => {

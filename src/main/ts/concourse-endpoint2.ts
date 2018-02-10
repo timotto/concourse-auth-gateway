@@ -23,18 +23,16 @@ export class ConcourseEndpoint2 {
             return Promise.resolve(res.status(400).send('X-Concourse-Url HTTP header is required'));
         }
 
-        this.extractAuthenticationCredentials(parsedConcourseRequest);
-
-        return this.concourseProxy.proxyRequest(parsedConcourseRequest)
+        return this.extractAuthenticationCredentials(parsedConcourseRequest).
+            then(() => this.concourseProxy.proxyRequest(parsedConcourseRequest))
             .then(parsedResponse => ConcourseEndpoint2.forwardResponse(parsedResponse, res))
-            .catch(error => res.status(500).send(error.message));
+            .catch(error => res.status(500).send(error));
     }
 
-    private extractAuthenticationCredentials(parsedConcourseRequest: ParsedConcourseRequest) {
-        if (!parsedConcourseRequest.isAuthenticationRequest) return;
+    private extractAuthenticationCredentials(parsedConcourseRequest: ParsedConcourseRequest): Promise<void> {
+        if (!parsedConcourseRequest.isAuthenticationRequest) return Promise.resolve();
 
-        this.credentialRepository.saveAuthenticationCredentials(parsedConcourseRequest.concourseUrl, parsedConcourseRequest.team, parsedConcourseRequest.authorizationHeaderValue)
-            .catch(e => console.error(`failed to save authentication credentials for team ${parsedConcourseRequest.team} at url ${parsedConcourseRequest.concourseUrl}`, e));
+        return this.credentialRepository.saveAuthenticationCredentials(parsedConcourseRequest.concourseUrl, parsedConcourseRequest.team, parsedConcourseRequest.authorizationHeaderValue);
     }
 
     private static forwardResponse(parsedConcourseResponse: ParsedConcourseResponse, res: Response): Promise<Response> {
