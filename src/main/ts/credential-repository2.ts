@@ -44,10 +44,22 @@ export class CredentialRepository2 {
     }
 
     public loadAllAtcTokens(concourseUrl: string): Promise<any[]> {
-        return Promise.resolve(Object.keys(this.atcTokens)
-            .map(keyPairString => ({s: keyPairString, o: JSON.parse(keyPairString)}))
-            .filter(p => p.o.url === concourseUrl)
-            .map(p => ({team: p.o.team, token: this.atcTokens[p.s]})));
+        const a = Object.keys(this.atcTokens)
+            .map(k => JSON.parse(k))
+            .filter(o => o.url === concourseUrl)
+            .map(o => o.team);
+        const b = Object.keys(this.authenticationCredentials)
+            .map(k => JSON.parse(k))
+            .filter(o => o.url === concourseUrl)
+            .map(o => o.team);
+        const notInA = b.filter(team =>
+            a.filter(x => x === team).length === 0);
+
+        return Promise.all(a.concat(...notInA)
+            .map(team =>
+                this.loadAtcToken(concourseUrl, team)
+                    .then(token =>
+                        ({team: team, token: token}))));
     }
 
     public load(): Promise<void> {

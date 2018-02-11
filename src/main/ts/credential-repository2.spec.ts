@@ -10,6 +10,10 @@ const validTeam = 'team1';
 const validCredentials = 'Basic dXNlcjpwYXNzd29yZA==';
 const validToken = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjUxNzkzODMzMH0.OIJNEHFnopeC4hfalB5Z12R8MUAXmj0py4hLDGn32B8';
 
+const validConcourseUrl2 = 'https://different-concourse.example.com';
+const validTeam2 = 'team2';
+const validToken2 = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIDIiLCJhZG1pbiI6dHJ1ZSwiZXhwIjoyNTE3OTM4MzMwfQ.QAewWQ9kMhN6nHdy5D1c2sL4WTxM5rivHhGzv1UA5yg';
+
 const invalidUrlValues = [undefined, null, '', 'not-a-url'];
 const invalidTeamValues = [undefined, null, ''];
 const invalidCredentialValues = [undefined, null, ''];
@@ -139,10 +143,6 @@ describe('Credential Repository 2', () => {
     });
     describe('loadAllAtcTokens', () => {
         it('returns all saved team, atcToken pairs for the given concourseUrl', async () => {
-            const validConcourseUrl2 = 'https://different-concourse.example.com';
-            const validTeam2 = 'team2';
-            const validToken2 = 'Bearer TODO add different sample JWT';
-
             await unitUnderTest.saveAtcToken(validConcourseUrl, validTeam, validToken);
             await unitUnderTest.saveAtcToken(validConcourseUrl, validTeam2, validToken2);
             await unitUnderTest.saveAtcToken(validConcourseUrl2, validTeam2, validToken);
@@ -159,6 +159,22 @@ describe('Credential Repository 2', () => {
                 {team: validTeam2, token: validToken},
                 {team: validTeam, token: validToken2},
             ]);
+        });
+        it('calls loadAtcToken for known matching team with auth creds or atc tokens', async () => {
+            spyOn(unitUnderTest, 'loadAtcToken')
+                .and.returnValue(Promise.resolve());
+            const differentTeam = 'different team';
+
+            // given
+            await unitUnderTest.saveAuthenticationCredentials(validConcourseUrl, validTeam, validCredentials);
+            await unitUnderTest.saveAtcToken(validConcourseUrl, differentTeam, validToken);
+
+            // when
+            await unitUnderTest.loadAllAtcTokens(validConcourseUrl);
+
+            // then
+            expect(unitUnderTest.loadAtcToken).toHaveBeenCalledWith(validConcourseUrl, validTeam);
+            expect(unitUnderTest.loadAtcToken).toHaveBeenCalledWith(validConcourseUrl, differentTeam);
         });
     });
     describe('load', () => {
