@@ -28,8 +28,8 @@ export class ExpressApp {
 
     private useApp(): Promise<void> {
         this.app.use(bodyParser.json());
-        this.app.use("/", this.concourseEndpoint2.router);
         this.app.use("/healthz", this.healthEndpoint.router);
+        this.app.use("/", this.concourseEndpoint2.router);
 
         return Promise.resolve();
     }

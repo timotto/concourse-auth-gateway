@@ -4,6 +4,7 @@ import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-resp
 import {CredentialRepository2} from "./credential-repository2";
 import {Request} from 'express';
 import * as nock from "nock";
+import {HttpClient} from "./http-client";
 
 const mockConcourseUrl = 'http://concourse.example.com';
 const mockTeam = 'mock-team';
@@ -13,8 +14,9 @@ describe('ConcourseProxy', () => {
     let credentialRepository2: CredentialRepository2;
     let mockRequest: ParsedConcourseRequest;
     beforeEach(() => {
-        credentialRepository2 = new CredentialRepository2(undefined);
-        unitUnderTest = new ConcourseProxy(credentialRepository2);
+        const httpClient = new HttpClient();
+        credentialRepository2 = new CredentialRepository2(httpClient, undefined);
+        unitUnderTest = new ConcourseProxy(credentialRepository2, httpClient);
         mockRequest = new ParsedConcourseRequest(undefined, mockConcourseUrl, mockTeam, undefined);
         mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);
     });

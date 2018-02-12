@@ -2,6 +2,7 @@ import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-resp
 import * as request from 'request';
 import nock = require("nock");
 import {Util} from "./util";
+import {HttpResponse} from "./http-client";
 
 const mockConcourseUrl = 'http://mock-concourse';
 
@@ -57,9 +58,9 @@ describe('ConcourseResponseParser', () => {
 
 describe('ParsedConcourseResponse', () => {
     let unitUnderTest: ParsedConcourseResponse;
-    let mockResponse: request.Response;
+    let mockResponse: HttpResponse;
     beforeEach(() => {
-        mockResponse = jasmine.createSpyObj<request.Response>('request.Response', ['nothing']);
+        mockResponse = jasmine.createSpyObj<HttpResponse>('HttpResponse', ['nothing']);
         unitUnderTest = new ParsedConcourseResponse(mockResponse);
     });
     describe('setCsrfToken', () => {

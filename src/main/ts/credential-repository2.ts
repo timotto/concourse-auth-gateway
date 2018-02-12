@@ -2,8 +2,8 @@ import {Inject, Service} from "typedi";
 import * as url from 'url';
 import * as fs from 'fs';
 import * as jwt from 'jsonwebtoken';
-import {Util} from "./util";
 import {ConcourseResponseParser} from "./concourse-response-parser";
+import {HttpClient} from "./http-client";
 
 @Service()
 export class CredentialRepository2 {
@@ -12,7 +12,8 @@ export class CredentialRepository2 {
 
     private atcTokens = {};
 
-    constructor(@Inject("stateFilename") private stateFilename: string) {}
+    constructor(private httpClient: HttpClient,
+                @Inject("stateFilename") private stateFilename: string) {}
 
     public saveAuthenticationCredentials(concourseUrl: string, team: string, credentials: string): Promise<void> {
         return assertUrl(concourseUrl)
@@ -86,7 +87,7 @@ export class CredentialRepository2 {
 
         const options: any = {'Authorization': credentials};
 
-        return Util.rpGet(`${concourseUrl}/api/v1/teams/${team}/auth/token`, options)
+        return this.httpClient.get(`${concourseUrl}/api/v1/teams/${team}/auth/token`, options)
             .then(response => ConcourseResponseParser.parseConcourseResponse(response))
             .then(parsedResponse => parsedResponse.atcToken)
             .then(atcToken => atcToken === undefined

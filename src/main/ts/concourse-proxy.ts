@@ -1,14 +1,15 @@
 import {Service} from "typedi";
-import * as request from 'request';
 import {ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
 import {CredentialRepository2} from "./credential-repository2";
 import {Util} from "./util";
+import {HttpClient, HttpResponse} from "./http-client";
 
 @Service()
 export class ConcourseProxy {
 
-    constructor(private credentialRepository: CredentialRepository2) {
+    constructor(private credentialRepository: CredentialRepository2,
+                private httpClient: HttpClient) {
     }
 
     public proxyRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
@@ -22,14 +23,14 @@ export class ConcourseProxy {
         return this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
             .then(tokens => tokens.concat([{token: undefined}])
                 .map(pair => ConcourseProxy.createHeaders(req, pair.token))
-                .map(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options)))
+                .map(options => this.httpClient.get(`${req.concourseUrl}${req.request.url}`, options)))
             .then(promises => Promise.all(promises))
             .then(responses => responses.reduce(ConcourseProxy.mergeResponseBodies))
-            .then((mergedResponse: request.Response) =>
+            .then((mergedResponse: HttpResponse) =>
                 ConcourseResponseParser.parseConcourseResponse(mergedResponse))
     }
 
-    private static mergeResponseBodies(a: request.Response, b: request.Response): request.Response {
+    private static mergeResponseBodies(a: HttpResponse, b: HttpResponse): HttpResponse {
 
         const parsedBodyA = JSON.parse(a.body);
         let parsedBodyB: any;
@@ -45,7 +46,7 @@ export class ConcourseProxy {
         return this.credentialRepository.loadAtcToken(req.concourseUrl, req.team)
             .catch(() => undefined) // missing token is no error
             .then(atcToken => ConcourseProxy.createHeaders(req, atcToken))
-            .then(options => Util.rpGet(`${req.concourseUrl}${req.request.url}`, options))
+            .then(options => this.httpClient.get(`${req.concourseUrl}${req.request.url}`, options))
             .then(response => ConcourseResponseParser.parseConcourseResponse(response))
             .then(parsedConcourseResponse => this.saveBearerToken(req, parsedConcourseResponse))
     }

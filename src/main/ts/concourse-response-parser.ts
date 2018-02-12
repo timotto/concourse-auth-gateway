@@ -1,7 +1,7 @@
-import * as request from 'request';
 import {Util} from "./util";
+import {HttpResponse} from "./http-client";
 export class ConcourseResponseParser {
-    public static parseConcourseResponse(response: request.Response): Promise<ParsedConcourseResponse> {
+    public static parseConcourseResponse(response: HttpResponse): Promise<ParsedConcourseResponse> {
         const parsedResponse = new ParsedConcourseResponse(response);
         parsedResponse.setCsrfToken(response.headers['x-csrf-token']);
         parsedResponse.setAtcToken(response.headers['set-cookie']);
@@ -12,7 +12,7 @@ export class ConcourseResponseParser {
 export class ParsedConcourseResponse {
     public csrfToken?: string;
     public atcToken?: string;
-    constructor(readonly response: request.Response) {
+    constructor(readonly response: HttpResponse) {
 
     }
 

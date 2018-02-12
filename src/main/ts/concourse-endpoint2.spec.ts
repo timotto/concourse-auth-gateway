@@ -5,6 +5,7 @@ import {ConcourseProxy} from "./concourse-proxy";
 import {Request, Response} from 'express';
 import * as nock from "nock";
 import {ParsedConcourseResponse} from "./concourse-response-parser";
+import {HttpClient} from "./http-client";
 
 const mockConcourseUrl = 'http://concourse.example.com';
 const mockTeam = 'mock-team';
@@ -17,8 +18,9 @@ describe('Concourse Endpoint 2', () => {
     let mockResponse: Response;
     let mockRequest: any;
     beforeEach(() => {
-        credentialRepository2 = new CredentialRepository2(undefined);
-        concourseProxy = new ConcourseProxy(credentialRepository2);
+        const httpClient = new HttpClient();
+        credentialRepository2 = new CredentialRepository2(httpClient, undefined);
+        concourseProxy = new ConcourseProxy(credentialRepository2, httpClient);
         unitUnderTest = new ConcourseEndpoint2(credentialRepository2, concourseProxy);
 
         mockResponse = jasmine.createSpyObj<Response>('Response', ['status', 'send', 'contentType']);
