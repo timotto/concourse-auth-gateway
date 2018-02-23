@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 import {Express} from 'express';
 import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import {ConcourseProxy} from "./concourse-proxy";
 
 @Service()
@@ -12,7 +12,7 @@ export class ExpressApp {
 
     private app: Express = express();
 
-    constructor(private credentialRepository2: CredentialRepository2,
+    constructor(private credentialRepository2: CredentialService,
                 private concourseProxy: ConcourseProxy,
                 private concourseEndpoint2: ConcourseEndpoint2,
                 private healthEndpoint: HealthEndpoint,
