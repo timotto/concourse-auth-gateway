@@ -1,4 +1,4 @@
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import * as fs from 'fs';
 import * as nock from 'nock';
 import * as jwt from 'jsonwebtoken';
@@ -21,11 +21,11 @@ const invalidCredentialValues = [undefined, null, ''];
 const invalidTokenValues = [undefined, null, ''];
 
 describe('Credential Repository 2', () => {
-    let unitUnderTest: CredentialRepository2;
+    let unitUnderTest: CredentialService;
     let httpClient: HttpClient;
     beforeEach(async () => {
         httpClient = new HttpClient();
-        unitUnderTest = new CredentialRepository2(httpClient, undefined);
+        unitUnderTest = new CredentialService(httpClient, undefined);
         await unitUnderTest.load();
     });
     afterEach(done => {
@@ -71,11 +71,11 @@ describe('Credential Repository 2', () => {
             expect(actualCredentials).toEqual(validCredentials);
         });
         it('returns the credentials persisted in the state file', async () => {
-            const instance1 = new CredentialRepository2(httpClient, testStateFilename);
+            const instance1 = new CredentialService(httpClient, testStateFilename);
             await instance1.load();
             await instance1.saveAuthenticationCredentials(validConcourseUrl, validTeam, validCredentials);
 
-            const instance2 = new CredentialRepository2(httpClient, testStateFilename);
+            const instance2 = new CredentialService(httpClient, testStateFilename);
             await instance2.load();
             const actualResult = await instance2.loadAuthenticationCredentials(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validCredentials);
@@ -120,11 +120,11 @@ describe('Credential Repository 2', () => {
             expect(actualToken).toEqual(validToken);
         });
         it('returns the token persisted in the state file', async () => {
-            const instance1 = new CredentialRepository2(httpClient, testStateFilename);
+            const instance1 = new CredentialService(httpClient, testStateFilename);
             await instance1.load();
             await instance1.saveAtcToken(validConcourseUrl, validTeam, validToken);
 
-            const instance2 = new CredentialRepository2(httpClient, testStateFilename);
+            const instance2 = new CredentialService(httpClient, testStateFilename);
             await instance2.load();
             const actualResult = await instance2.loadAtcToken(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validToken);
@@ -182,13 +182,13 @@ describe('Credential Repository 2', () => {
     });
     describe('load', () => {
         it('does nothing if the stateFilename property is undefined', async () => {
-            const explicitlyUndefined = new CredentialRepository2(httpClient, undefined);
+            const explicitlyUndefined = new CredentialService(httpClient, undefined);
             await explicitlyUndefined.load();
         });
         it('does nothing if the file specified by stateFilename property does not exist', async () => {
             const filename = 'non-existing-file';
             expect(fs.existsSync(filename)).toBeFalsy(`test file ${filename} should not exist! delete and re-run test!`);
-            const explicitlyUndefined = new CredentialRepository2(httpClient, filename);
+            const explicitlyUndefined = new CredentialService(httpClient, filename);
             await explicitlyUndefined.load();
         });
         it('does nothing if the file content is invalid', async () => {

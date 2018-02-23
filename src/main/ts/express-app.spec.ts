@@ -1,6 +1,6 @@
 import {ExpressApp} from "./express-app";
 import {HealthEndpoint} from "./health-endpoint";
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import {ConcourseProxy} from "./concourse-proxy";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import any = jasmine.any;
@@ -8,13 +8,13 @@ import any = jasmine.any;
 describe('ExpressApp', () => {
 
     let unitUnderTest: ExpressApp;
-    let credentialRepository2: CredentialRepository2;
+    let credentialRepository2: CredentialService;
     let concourseProxy: ConcourseProxy;
     let concourseEndpoint2: ConcourseEndpoint2;
     let healthEndpoint: HealthEndpoint;
     let port: number;
     beforeEach(() => {
-        credentialRepository2 = jasmine.createSpyObj<CredentialRepository2>('CredentialRepository2', ['load']);
+        credentialRepository2 = jasmine.createSpyObj<CredentialService>('CredentialService', ['load']);
         (credentialRepository2.load as jasmine.Spy).and.returnValue(Promise.resolve());
 
         concourseProxy = jasmine.createSpyObj<ConcourseProxy>('ConcourseProxy', ['proxyRequest']);
@@ -28,7 +28,7 @@ describe('ExpressApp', () => {
             .and.callFake((port,cb)=>cb());
     });
     describe('start', () => {
-        it('calls .load() on the CredentialRepository2 instance', async () => {
+        it('calls .load() on the CredentialService instance', async () => {
             expect(credentialRepository2.load).toHaveBeenCalledTimes(0);
             await unitUnderTest.start();
             expect(credentialRepository2.load).toHaveBeenCalledTimes(1);

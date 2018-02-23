@@ -3,7 +3,7 @@ import {Router, Request, Response} from 'express';
 import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseProxy} from "./concourse-proxy";
 import {ParsedConcourseResponse} from "./concourse-response-parser";
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import {Util} from "./util";
 
 @Service()
@@ -11,7 +11,7 @@ export class ConcourseEndpoint2 {
 
     readonly router: Router = Router();
 
-    constructor(private credentialRepository: CredentialRepository2,
+    constructor(private credentialRepository: CredentialService,
                 private concourseProxy: ConcourseProxy){
 
         this.router.get('*', this.handleRequest.bind(this));

@@ -6,7 +6,7 @@ import {ConcourseResponseParser} from "./concourse-response-parser";
 import {HttpClient} from "./http-client";
 
 @Service()
-export class CredentialRepository2 {
+export class CredentialService {
 
     private authenticationCredentials = {};
 
