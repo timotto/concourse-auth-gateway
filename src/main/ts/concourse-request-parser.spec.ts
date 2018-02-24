@@ -43,6 +43,16 @@ describe('ConcourseRequestParser', () => {
             request.url = `/api/v1/user`;
             expect(ConcourseRequestParser.parseRequest(request).team).toEqual(undefined);
         });
+        it('fills the team property of the response if the request url matches the pattern "/auth/basic/token?team_name=(.*)"', () => {
+            const expectedConcourseUrl = 'http://expected-concourse.example.com';
+            const expectedTeam = 'team-expected';
+            const request: Request = jasmine.createSpyObj<Request>("Request", ['headers', 'url']);
+
+            request.headers = {'x-concourse-url': expectedConcourseUrl};
+
+            request.url = `/auth/basic/token?team_name=${expectedTeam}`;
+            expect(ConcourseRequestParser.parseRequest(request).team).toEqual(expectedTeam);
+        });
         it('fills the authorizationHeaderValue of the response if an Authorization HTTP header value is found in the request', () => {
             const expectedConcourseUrl = 'http://expected-concourse.example.com';
             const expectedTeam = 'team-expected';
