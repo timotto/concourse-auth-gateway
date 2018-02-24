@@ -20,7 +20,7 @@ const invalidTeamValues = [undefined, null, ''];
 const invalidCredentialValues = [undefined, null, ''];
 const invalidTokenValues = [undefined, null, ''];
 
-describe('Credential Repository 2', () => {
+describe('CredentialService', () => {
     let unitUnderTest: CredentialService;
     let httpClient: HttpClient;
     beforeEach(async () => {
