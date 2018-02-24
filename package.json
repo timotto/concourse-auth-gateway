@@ -29,7 +29,7 @@
     "nyc": "^11.4.1",
     "supertest": "^3.0.0",
     "typescript": "^2.5.2",
-    "typescript-eslint-parser": "^13.0.0",
+    "typescript-eslint-parser": "^14.0.0",
     "yarn": "^1.1.0"
   },
   "dependencies": {
@@ -40,7 +40,7 @@
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "request-promise-native": "^1.0.5",
-    "typedi": "^0.6.1"
+    "typedi": "^0.7.0"
   },
   "license": "Apache-2.0"
 }
