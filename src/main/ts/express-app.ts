@@ -6,6 +6,7 @@ import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import {CredentialService} from "./credential-service";
 import {ConcourseProxy} from "./concourse-proxy";
+import {CredentialEndpoint} from "./credential-endpoint";
 
 @Service()
 export class ExpressApp {
@@ -16,6 +17,7 @@ export class ExpressApp {
                 private concourseProxy: ConcourseProxy,
                 private concourseEndpoint2: ConcourseEndpoint2,
                 private healthEndpoint: HealthEndpoint,
+                private credentialEndpoint: CredentialEndpoint,
                 @Inject('port') private port: number) {
     }
 
@@ -27,6 +29,7 @@ export class ExpressApp {
     private useApp() {
         this.app.use(bodyParser.json());
         this.app.use("/healthz", this.healthEndpoint.router);
+        this.app.use("/_auth", this.credentialEndpoint.router);
         this.app.use("/", this.concourseEndpoint2.router);
     }
 
