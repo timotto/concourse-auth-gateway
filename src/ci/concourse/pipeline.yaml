@@ -1,17 +1,26 @@
 jobs:
 - name: build-rpi
   plan:
-  - get: source-code
+  - get: app-source-code
     trigger: true
   - put: rpi-docker-image
     params:
       build: source-code
 
 resources:
-- name: source-code
+- name: app-source-code
   type: git
   source:
     uri: https://github.com/timotto/concourse-auth-gateway.git
+    paths:
+    - src/main
+    - package.json
+    - yarn.lock
+    - tsconfig.json
+    - jasmine.json
+    - Dockerfile
+    - .eslintrc.yaml
+
 - name: rpi-docker-image
   type: remote-docker-image
   source:
@@ -19,7 +28,6 @@ resources:
     username: ((docker.username))
     password: ((docker.password))
     dockerd: ((dockerd))
-
 
 resource_types:
 - name: remote-docker-image

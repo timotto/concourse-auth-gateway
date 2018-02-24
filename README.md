@@ -27,9 +27,15 @@ Team credentials can be entered using the web interface through the proxy of the
 Alternatively basic authentication credentials as well as ATC Bearer Tokens can also be
 entered using the ```/_auth/basic``` and ```/_auth/token``` endpoints, eg.:
 ```bash
-http POST concourse-gateway.cloud.corp/_auth/token team=some-team token="Bearer AAx..." concourseUrl=https://ci.cloud.corp
+http POST concourse-gateway.cloud.corp/_auth/token \
+    team=some-team \
+    token="Bearer AAx..." \
+    concourseUrl=https://ci.cloud.corp
 #or 
-http POST concourse-gateway.cloud.corp/_auth/basic team=different-team credentials="Basic BASE64..." concourseUrl=https://ci.cloud.corp
+http POST concourse-gateway.cloud.corp/_auth/basic \
+    team=different-team \
+    credentials="Basic BASE64..." \
+    concourseUrl=https://ci.cloud.corp
 ```
 This allows running the Concourse Auth Gateway behind a Basic Authentication protected
 reverse proxy which would prohibit the use of (again) Basic Authentication to log-in 
