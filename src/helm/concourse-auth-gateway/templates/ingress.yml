@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: concourse-auth-gateway
+  labels:
+    app: concourse-auth-gateway
+spec:
+  rules:
+  - host: {{ .Values.ingressHostname }}
+    http:
+      paths:
+      - backend:
+          serviceName: concourse-auth-gateway
+          servicePort: 3001

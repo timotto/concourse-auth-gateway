@@ -1,0 +1,11 @@
+name: concourse-auth-gateway
+version: 0.0.1
+description: Concourse Authenticating Gateway
+keywords:
+- nodejs
+- redis
+sources:
+- https://github.com/timotto/concourse-auth-gateway
+maintainers:
+- name: Tim
+engine: gotpl

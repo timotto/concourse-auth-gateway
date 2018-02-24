@@ -1,0 +1,4 @@
+replicas: 2
+imageRegistry: timotto
+imageName: concourse-auth-gateway
+redisDockerImage: redis

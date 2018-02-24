@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: concourse-auth-gateway
+spec:
+  selector:
+    matchLabels:
+      app: concourse-auth-gateway
+  replicas: {{.Values.replicas}}
+  template:
+    metadata:
+      labels:
+        app: concourse-auth-gateway
+    spec:
+      imagePullSecrets:
+      - name: {{.Values.imageSecret}}
+      containers:
+        - name: concourse-auth-gateway
+          image: {{.Values.imageRegistry}}/{{.Values.imageName}}:latest
+          imagePullPolicy: Always
+          env:
+          - name: REDIS_URL
+            value: redis://redis-service:6379
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "60Mi"
+            requests:
+              cpu: "0.2"
+              memory: "30Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          ports:
+          - containerPort: 3001

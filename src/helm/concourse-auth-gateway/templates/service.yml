@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: concourse-auth-gateway
+  labels:
+    app: concourse-auth-gateway
+spec:
+  type: {{ .Values.serviceType }}
+  ports:
+  - port: 3001
+    targetPort: 3001
+    protocol: TCP
+    name: http
+  selector:
+    app: concourse-auth-gateway
