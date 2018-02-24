@@ -1,5 +1,5 @@
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import {ConcourseRequestParser, ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseProxy} from "./concourse-proxy";
 import {Request, Response} from 'express';
@@ -12,14 +12,14 @@ const mockTeam = 'mock-team';
 
 describe('Concourse Endpoint 2', () => {
     let unitUnderTest: ConcourseEndpoint2;
-    let credentialRepository2: CredentialRepository2;
+    let credentialRepository2: CredentialService;
     let concourseProxy: ConcourseProxy;
 
     let mockResponse: Response;
     let mockRequest: any;
     beforeEach(() => {
         const httpClient = new HttpClient();
-        credentialRepository2 = new CredentialRepository2(httpClient, undefined);
+        credentialRepository2 = new CredentialService(httpClient, undefined);
         concourseProxy = new ConcourseProxy(credentialRepository2, httpClient);
         unitUnderTest = new ConcourseEndpoint2(credentialRepository2, concourseProxy);
 

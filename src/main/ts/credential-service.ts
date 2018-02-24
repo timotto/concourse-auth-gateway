@@ -1,75 +1,61 @@
-import {Inject, Service} from "typedi";
+import {Service} from "typedi";
 import * as url from 'url';
-import * as fs from 'fs';
 import * as jwt from 'jsonwebtoken';
 import {ConcourseResponseParser} from "./concourse-response-parser";
 import {HttpClient} from "./http-client";
+import {CredentialRepository} from "./credential-repository";
 
 @Service()
-export class CredentialRepository2 {
-
-    private authenticationCredentials = {};
-
-    private atcTokens = {};
+export class CredentialService {
 
     constructor(private httpClient: HttpClient,
-                @Inject("stateFilename") private stateFilename: string) {}
+                private credentialRepository: CredentialRepository) {}
 
     public saveAuthenticationCredentials(concourseUrl: string, team: string, credentials: string): Promise<void> {
         return assertUrl(concourseUrl)
             .then(() => assertStringValue(team, 'team name'))
             .then(() => assertStringValue(credentials, 'credentials value'))
-            .then(() => {this.authenticationCredentials[mergeKeyPair(concourseUrl, team)] = credentials;})
-            .then(() => this.save());
+            .then(() => this.credentialRepository.set('auth', mergeKeyPair(concourseUrl, team), credentials));
     }
 
     public loadAuthenticationCredentials(concourseUrl: string, team: string): Promise<string> {
         return assertUrl(concourseUrl)
             .then(() => assertStringValue(team, 'team name'))
-            .then(() => this.authenticationCredentials[mergeKeyPair(concourseUrl, team)]);
+            .then(() => this.credentialRepository.get('auth', mergeKeyPair(concourseUrl, team)))
     }
 
     public saveAtcToken(concourseUrl: string, team: string, token: string): Promise<void> {
         return assertUrl(concourseUrl)
             .then(() => assertStringValue(team, 'team name'))
             .then(() => assertStringValue(token, 'token value'))
-            .then(() => {this.atcTokens[mergeKeyPair(concourseUrl, team)] = token;})
-            .then(() => this.save());
+            .then(() => this.credentialRepository.set('token', mergeKeyPair(concourseUrl, team), token));
     }
 
     public loadAtcToken(concourseUrl: string, team: string): Promise<string> {
         return assertUrl(concourseUrl)
             .then(() => assertStringValue(team, 'team name'))
-            .then(() => this.atcTokens[mergeKeyPair(concourseUrl, team)])
+            .then(() => this.credentialRepository.get('token', mergeKeyPair(concourseUrl, team)))
             .then(atcToken => this.assertAtcToken(concourseUrl, team, atcToken));
     }
 
     public loadAllAtcTokens(concourseUrl: string): Promise<any[]> {
-        const a = Object.keys(this.atcTokens)
+        const loader = group => this.credentialRepository.keys(group)
+            .then(keys => keys
             .map(k => JSON.parse(k))
             .filter(o => o.url === concourseUrl)
-            .map(o => o.team);
-        const b = Object.keys(this.authenticationCredentials)
-            .map(k => JSON.parse(k))
-            .filter(o => o.url === concourseUrl)
-            .map(o => o.team);
-        const notInA = b.filter(team =>
-            a.filter(x => x === team).length === 0);
+            .map(o => o.team));
 
-        return Promise.all(a.concat(...notInA)
-            .map(team =>
-                this.loadAtcToken(concourseUrl, team)
-                    .then(token =>
-                        ({team: team, token: token}))));
-    }
+        const filterer = (a,b) => a.concat(...b.filter(team =>
+            a.filter(x => x === team).length === 0));
 
-    public load(): Promise<void> {
-        if (this.stateFilename === undefined) return Promise.resolve();
+        const mapper = team => this.loadAtcToken(concourseUrl, team)
+            .then(token => ({team, token}));
 
-        return new Promise<void>(resolve => fs.readFile(this.stateFilename, 'utf-8', ((err, data) => {
-            this.loadFromFile(err, data);
-            resolve();
-        })));
+        return Promise.all([loader('auth'), loader('token')])
+            .then(groups => filterer(groups[0], groups[1])
+                .map(team => mapper(team)))
+            .then(loadTokenOperations =>
+                Promise.all(loadTokenOperations));
     }
 
     public assertAtcToken(concourseUrl: string, team: string, atcToken: string | undefined): Promise<string | undefined> {
@@ -95,28 +81,6 @@ export class CredentialRepository2 {
                 : this.saveAtcToken(concourseUrl, team, atcToken)
                     .then(() => atcToken)
                     .catch(() => atcToken));
-    }
-
-    private loadFromFile(err, data) {
-        if (err) return;
-
-        let parsedData: any;
-        try { parsedData = JSON.parse(data); }
-        catch (e) { return; }
-
-        if (parsedData['authenticationCredentials'] !== undefined)
-            this.authenticationCredentials = parsedData['authenticationCredentials'];
-        if (parsedData['atcTokens'] !== undefined)
-            this.atcTokens = parsedData['atcTokens'];
-    }
-
-    private save(): Promise<void> {
-        return this.stateFilename === undefined
-            ? Promise.resolve()
-            : new Promise<void>((resolve, reject) => fs.writeFile(this.stateFilename, JSON.stringify({
-                authenticationCredentials: this.authenticationCredentials,
-                atcTokens: this.atcTokens
-            }), err => err ? reject(err) : resolve()));
     }
 }
 

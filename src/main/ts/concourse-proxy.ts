@@ -1,14 +1,14 @@
 import {Service} from "typedi";
 import {ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import {Util} from "./util";
 import {HttpClient, HttpResponse} from "./http-client";
 
 @Service()
 export class ConcourseProxy {
 
-    constructor(private credentialRepository: CredentialRepository2,
+    constructor(private credentialRepository: CredentialService,
                 private httpClient: HttpClient) {
     }
 

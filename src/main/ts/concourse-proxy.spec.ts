@@ -1,7 +1,7 @@
 import {ConcourseProxy} from "./concourse-proxy";
 import {ParsedConcourseRequest} from "./concourse-request-parser";
 import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
-import {CredentialRepository2} from "./credential-repository2";
+import {CredentialService} from "./credential-service";
 import {Request} from 'express';
 import * as nock from "nock";
 import {HttpClient} from "./http-client";
@@ -11,11 +11,11 @@ const mockTeam = 'mock-team';
 
 describe('ConcourseProxy', () => {
     let unitUnderTest: ConcourseProxy;
-    let credentialRepository2: CredentialRepository2;
+    let credentialRepository2: CredentialService;
     let mockRequest: ParsedConcourseRequest;
     beforeEach(() => {
         const httpClient = new HttpClient();
-        credentialRepository2 = new CredentialRepository2(httpClient, undefined);
+        credentialRepository2 = new CredentialService(httpClient, undefined);
         unitUnderTest = new ConcourseProxy(credentialRepository2, httpClient);
         mockRequest = new ParsedConcourseRequest(undefined, mockConcourseUrl, mockTeam, undefined);
         mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);
@@ -24,7 +24,7 @@ describe('ConcourseProxy', () => {
         nock.cleanAll();
     });
     describe('proxyRequest',  () => {
-        it('calls CredentialRepository2.loadAtcToken with the details found in the request', async () => {
+        it('calls CredentialService.loadAtcToken with the details found in the request', async () => {
             // stub
             nock(mockConcourseUrl)
                 .get('/')
@@ -118,7 +118,7 @@ describe('ConcourseProxy', () => {
             // then
             expect(scope.isDone()).toBeTruthy();
         });
-        it('sets the ATC-Authorization Cookie if an ATC token was found in the CredentialRepository2', async () => {
+        it('sets the ATC-Authorization Cookie if an ATC token was found in the CredentialService', async () => {
             const expectedPath = `/api/v1/teams/${mockTeam}/pipelines`;
             const validToken = 'Bearer token';
 
