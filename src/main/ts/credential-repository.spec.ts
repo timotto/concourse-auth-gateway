@@ -88,9 +88,9 @@ describe('CredentialRepository', () => {
             });
         });
     });
-    describe('with un-defined redis url', () => {
+    describe('with empty redis url', () => {
         beforeEach(() => {
-            unitUnderTest = new CredentialRepository(undefined, testSecret);
+            unitUnderTest = new CredentialRepository('', testSecret);
         });
         describe('constructor', () => {
             it('does not create a RedisClient', () => {

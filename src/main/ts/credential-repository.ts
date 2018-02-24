@@ -17,7 +17,7 @@ export class CredentialRepository {
     private hkeys;
     constructor(@Inject("redisUrl") private redisUrl: string,
                 @Inject("secret") private secret: string) {
-        if (redisUrl !== undefined) {
+        if (redisUrl !== '') {
             const redisClient = redis.createClient(redisUrl);
             this.hset = promisify(redisClient.hset).bind(redisClient);
             this.hget = promisify(redisClient.hget).bind(redisClient);
