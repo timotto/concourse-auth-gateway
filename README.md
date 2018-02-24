@@ -21,6 +21,31 @@ url.
 The ```/api/v1/pipelines``` endpoint has special treatment: it is executed with every
 known credential and the result is merged.
 
+## Credential Management
+
+Team credentials can be entered using the web interface through the proxy of the instance.
+Alternatively basic authentication credentials as well as ATC Bearer Tokens can also be
+entered using the ```/_auth/basic``` and ```/_auth/token``` endpoints, eg.:
+```bash
+http POST concourse-gateway.cloud.corp/_auth/token team=some-team token="Bearer AAx..." concourseUrl=https://ci.cloud.corp
+#or 
+http POST concourse-gateway.cloud.corp/_auth/basic team=different-team credentials="Basic BASE64..." concourseUrl=https://ci.cloud.corp
+```
+This allows running the Concourse Auth Gateway behind a Basic Authentication protected
+reverse proxy which would prohibit the use of (again) Basic Authentication to log-in 
+to a Concourse team while still maintaining an interface to manage team credentials.
+
+### Persistence
+
+The app itself tries to follow the principles of [the 12 factor app](https://12factor.net/)
+and is ready for stateless cluster operation. For credentials and tokens to be available
+across the cluster a Redis server is used as shared memory between the instances. The
+values of credentials and tokens stored on the Redis server are encrypted using symmetric 
+AES-256 block cipher based on the provided ```SECRET``` value shared across all instances.
+
+#### TODO / Warning
+*Until the cipher is not applied using a salt this implementation is not considered to be safe.*
+
 ## Configuration
 
 All configuration is done through environment variables. 
