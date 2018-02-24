@@ -14,8 +14,7 @@ describe('ExpressApp', () => {
     let healthEndpoint: HealthEndpoint;
     let port: number;
     beforeEach(() => {
-        credentialRepository2 = jasmine.createSpyObj<CredentialService>('CredentialService', ['load']);
-        (credentialRepository2.load as jasmine.Spy).and.returnValue(Promise.resolve());
+        credentialRepository2 = jasmine.createSpyObj<CredentialService>('CredentialService', ['nothing']);
 
         concourseProxy = jasmine.createSpyObj<ConcourseProxy>('ConcourseProxy', ['proxyRequest']);
         concourseEndpoint2 = jasmine.createSpyObj<ConcourseEndpoint2>('ConcourseEndpoint2', ['handleRequest']);
@@ -28,19 +27,6 @@ describe('ExpressApp', () => {
             .and.callFake((port,cb)=>cb());
     });
     describe('start', () => {
-        it('calls .load() on the CredentialService instance', async () => {
-            expect(credentialRepository2.load).toHaveBeenCalledTimes(0);
-            await unitUnderTest.start();
-            expect(credentialRepository2.load).toHaveBeenCalledTimes(1);
-        });
-        it('rejects the Promise if the .load() call fails', async () => {
-            const expectedReason = 'expected rejection';
-            (credentialRepository2.load as jasmine.Spy).and.returnValue(Promise.reject(expectedReason));
-
-            await unitUnderTest.start()
-                .then(() => fail())
-                .catch(e => expect(e).toEqual(expectedReason));
-        });
         it('registers the ConcourseEndpoint2 on /', async () => {
             await unitUnderTest.start();
             expect((unitUnderTest as any).app.use)

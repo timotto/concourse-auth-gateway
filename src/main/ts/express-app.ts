@@ -20,18 +20,14 @@ export class ExpressApp {
     }
 
     public start(): Promise<void> {
-        return this.credentialRepository2
-            .load()
-            .then(() => this.useApp())
-            .then(() => this.listen());
+        this.useApp();
+        return this.listen();
     }
 
-    private useApp(): Promise<void> {
+    private useApp() {
         this.app.use(bodyParser.json());
         this.app.use("/healthz", this.healthEndpoint.router);
         this.app.use("/", this.concourseEndpoint2.router);
-
-        return Promise.resolve();
     }
 
     private listen(): Promise<void> {

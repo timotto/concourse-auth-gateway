@@ -10,7 +10,7 @@ Concourse so that pipelines do not have to be exposed or public for a status mon
 to display them.
 
 To select a Concourse backend the client needs to send the URL to the Concourse
-instance in the ```X-Concourse-Url``` HTTP header value.
+instance in the ```X-Concourse-Url``` HTTP header value. 
 
 To add credentials simply log-in to a team using the web interface through the 
 Concourse Reverse Proxy.
@@ -23,10 +23,13 @@ known credential and the result is merged.
 
 ## Configuration
 
-The ```STATE_FILENAME``` environment variable controls the location of the file to save
-the stored credentials and tokens in.
-
-The ```PORT``` environment variable defines the TCP port the application is listening on.
-
-If ```CONCOURSE_URL``` is set the ```X-Concourse-Url``` HTTP header will be ignored and
-the Concourse URL is fixed.
+All configuration is done through environment variables. 
+In The default configuration the credentials are not persisted and will be lost after
+the application is shutdown.
+- ```PORT``` default: ```3001``` defines the TCP port the application is listening on
+- ```CONCOURSE_URL``` default: ```undefined``` overrides the ```X-Concourse-Url``` HTTP 
+header value turning the gateway into a fixed Concourse proxy for the given instance
+- ```REDIS_URL``` default: ```undefined``` defines the URL of the Redis server used as 
+credential repository. Credentials are not persisted if no value is given
+- ```SECRET``` default: ```changeme``` must be shared across all instances using the
+same Redis server as backing store
