@@ -1,0 +1,29 @@
+jobs:
+- name: build-rpi
+  plan:
+  - get: source-code
+    trigger: true
+  - put: rpi-docker-image
+    params:
+      build: source-code
+
+resources:
+- name: source-code
+  type: git
+  source:
+    uri: https://github.com/timotto/concourse-auth-gateway.git
+- name: rpi-docker-image
+  type: remote-docker-image
+  source:
+    repository: ((project-registry))/((rpi-image-name))
+    username: ((docker.username))
+    password: ((docker.password))
+    dockerd: ((dockerd))
+
+
+resource_types:
+- name: remote-docker-image
+  type: docker-image
+  source:
+    repository: timotto/docker-image-resource
+  privileged: true
