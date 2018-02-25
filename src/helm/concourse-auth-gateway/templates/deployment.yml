@@ -12,8 +12,6 @@ spec:
       labels:
         app: concourse-auth-gateway
     spec:
-      imagePullSecrets:
-      - name: {{.Values.imageSecret}}
       containers:
         - name: concourse-auth-gateway
           image: {{.Values.imageRegistry}}/{{.Values.imageName}}:latest
@@ -28,7 +26,7 @@ spec:
           - name: DIGEST
             value: {{.Values.credentialEncryption.digest}}
           - name: ITERATIONS
-            value: {{.Values.credentialEncryption.iterations}}
+            value: {{.Values.credentialEncryption.iterations | quote}}
           resources:
             limits:
               cpu: "0.5"
