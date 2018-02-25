@@ -30,10 +30,10 @@ export class CryptoThen {
         const parts = ciphertextAndIv.split('.');
         if (parts.length !== 2) return Promise.reject('invalid ciphertextAndIv');
 
-        const iv = new Buffer(parts[0], 'hex');
-        const decipher = crypto.createDecipheriv(algo, key, iv);
-
         try {
+            const iv = new Buffer(parts[0], 'hex');
+            const decipher = crypto.createDecipheriv(algo, key, iv);
+
             const plaintext = [
                 decipher.update(parts[1], 'hex', 'utf8'),
                 decipher.final('utf8')

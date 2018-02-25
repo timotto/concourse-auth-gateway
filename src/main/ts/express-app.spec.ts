@@ -1,30 +1,28 @@
 import {ExpressApp} from "./express-app";
 import {HealthEndpoint} from "./health-endpoint";
-import {CredentialService} from "./credential-service";
-import {ConcourseProxy} from "./concourse-proxy";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import any = jasmine.any;
 import {CredentialEndpoint} from "./credential-endpoint";
+import {CredentialRepository} from "./credential-repository";
 
 describe('ExpressApp', () => {
 
     let unitUnderTest: ExpressApp;
-    let credentialRepository2: CredentialService;
-    let concourseProxy: ConcourseProxy;
+    let credentialRepository: CredentialRepository;
     let concourseEndpoint2: ConcourseEndpoint2;
     let healthEndpoint: HealthEndpoint;
     let credentialsEndpoint: CredentialEndpoint;
     let port: number;
     beforeEach(() => {
-        credentialRepository2 = jasmine.createSpyObj<CredentialService>('CredentialService', ['nothing']);
 
-        concourseProxy = jasmine.createSpyObj<ConcourseProxy>('ConcourseProxy', ['proxyRequest']);
+        credentialRepository = jasmine.createSpyObj<CredentialRepository>('CredentialRepository', ['start']);
+        (credentialRepository.start as jasmine.Spy).and.returnValue(Promise.resolve());
         concourseEndpoint2 = jasmine.createSpyObj<ConcourseEndpoint2>('ConcourseEndpoint2', ['handleRequest']);
         healthEndpoint = jasmine.createSpyObj<HealthEndpoint>('HealthEndpoint', ['nothing']);
         credentialsEndpoint = jasmine.createSpyObj<CredentialEndpoint>('CredentialEndpoint', ['nothing']);
         port = 12345;
 
-        unitUnderTest = new ExpressApp(credentialRepository2, concourseProxy, concourseEndpoint2, healthEndpoint, credentialsEndpoint, port);
+        unitUnderTest = new ExpressApp(credentialRepository, concourseEndpoint2, healthEndpoint, credentialsEndpoint, port);
         spyOn((unitUnderTest as any).app, 'use').and.stub();
         spyOn((unitUnderTest as any).app, 'listen')
             .and.callFake((port,cb)=>cb());

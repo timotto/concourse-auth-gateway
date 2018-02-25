@@ -24,7 +24,7 @@ describe('CredentialService', () => {
     let credentialRepository: CredentialRepository;
     beforeEach(async () => {
         httpClient = new HttpClient();
-        credentialRepository = new CredentialRepository('', undefined);
+        credentialRepository = new CredentialRepository('', undefined, undefined, 1, undefined);
         unitUnderTest = new CredentialService(httpClient, credentialRepository);
     });
     afterEach(() => {

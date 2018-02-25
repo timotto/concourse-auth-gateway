@@ -4,17 +4,15 @@ import * as bodyParser from 'body-parser';
 import {Express} from 'express';
 import {HealthEndpoint} from "./health-endpoint";
 import {ConcourseEndpoint2} from "./concourse-endpoint2";
-import {CredentialService} from "./credential-service";
-import {ConcourseProxy} from "./concourse-proxy";
 import {CredentialEndpoint} from "./credential-endpoint";
+import {CredentialRepository} from "./credential-repository";
 
 @Service()
 export class ExpressApp {
 
     private app: Express = express();
 
-    constructor(private credentialRepository2: CredentialService,
-                private concourseProxy: ConcourseProxy,
+    constructor(private credentialRepository: CredentialRepository,
                 private concourseEndpoint2: ConcourseEndpoint2,
                 private healthEndpoint: HealthEndpoint,
                 private credentialEndpoint: CredentialEndpoint,
@@ -23,7 +21,8 @@ export class ExpressApp {
 
     public start(): Promise<void> {
         this.useApp();
-        return this.listen();
+        return this.credentialRepository.start()
+            .then(() => this.listen());
     }
 
     private useApp() {

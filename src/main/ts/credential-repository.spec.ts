@@ -3,10 +3,14 @@ import * as redis from 'redis';
 import {RedisClient} from 'redis';
 import * as crypto from 'crypto';
 import any = jasmine.any;
+import {CryptoThen} from "./crypto-then";
 
 const cipherAlgorithm = 'aes256';
 const testRedisUrl = 'test-redis-url';
 const testSecret = 'test secret value';
+const testSalt = 'test salt value';
+const testIterations = 100000;
+const testDigest = 'sha512';
 
 describe('CredentialRepository', () => {
     let unitUnderTest: CredentialRepository;
@@ -22,13 +26,27 @@ describe('CredentialRepository', () => {
             .and.returnValue(mockRedisClient);
     });
     describe('with defined redis url', () => {
-        beforeEach(() => {
-            unitUnderTest = new CredentialRepository(testRedisUrl, testSecret);
+        beforeEach(async () => {
+            unitUnderTest = new CredentialRepository(testRedisUrl, testSecret, testSalt, testIterations, testDigest);
+            await unitUnderTest.start();
         });
         describe('constructor', () => {
             it('creates a new RedisClient', () => {
                 expect(redis.createClient)
                     .toHaveBeenCalled();
+            });
+        });
+        describe('start', () => {
+            it('creates a key using PBKDF2', async () => {
+                spyOn(crypto, 'pbkdf2')
+                    .and.callThrough();
+
+                // when
+                await unitUnderTest.start();
+
+                // then
+                expect(crypto.pbkdf2)
+                    .toHaveBeenCalledWith(testSecret, testSalt, testIterations, 32, testDigest, any(Function))
             });
         });
         describe('get(group,id,value)',  () => {
@@ -37,9 +55,9 @@ describe('CredentialRepository', () => {
                 const givenGroup = 'given group';
                 const givenId = 'given id';
                 const expectedJsonValue = {given:'value'};
-                const givenRedisValue
-                    = cipher.update(JSON.stringify(expectedJsonValue), 'utf8', 'hex')
-                    + cipher.final('hex');
+                const key = await CryptoThen.pbkdf2(testSecret, testSalt, testIterations, 32, testDigest);
+                const givenRedisValue = await CryptoThen.encrypt(JSON.stringify(expectedJsonValue), key, cipherAlgorithm);
+
                 mockRedisClient.hget
                     .and.callFake((hk,k,cb)=>cb(undefined, givenRedisValue));
                 // when
@@ -50,9 +68,30 @@ describe('CredentialRepository', () => {
                     .toHaveBeenCalledWith(givenGroup, givenId, any(Function));
                 expect(actualResult).toEqual(expectedJsonValue);
             });
+            it('returns undefined if the decrypts fails', async () => {
+                // given
+                const givenGroup = 'given group';
+                const givenId = 'given id';
+                const expectedJsonValue = {given:'value'};
+                const differentKey = await CryptoThen.pbkdf2('different' + testSecret, testSalt, testIterations, 32, testDigest);
+                const givenRedisValue = await CryptoThen.encrypt(JSON.stringify(expectedJsonValue), differentKey, cipherAlgorithm);
+
+                mockRedisClient.hget
+                    .and.callFake((hk,k,cb)=>cb(undefined, givenRedisValue));
+                // when
+                const actualResult = await unitUnderTest.get(givenGroup, givenId);
+
+                // then
+                expect(actualResult).toBeUndefined();
+            });
         });
         describe('set(group,id,value)',  () => {
             it('turns value into a JSON string, encrypts it, then writes that to redis at group-key', async () => {
+
+                // random must be the same on test crypto op and reference crypto op
+                const predictedRandom = crypto.randomBytes(16);
+                spyOn(crypto, 'randomBytes').and.returnValue(predictedRandom);
+
                 mockRedisClient.hset
                     .and.callFake((hk,k,v,cb) => cb());
 
@@ -60,9 +99,8 @@ describe('CredentialRepository', () => {
                 const givenGroup = 'given group';
                 const givenId = 'given id';
                 const givenJsonValue = {given:'value'};
-                const expectedRedisValue
-                    = cipher.update(JSON.stringify(givenJsonValue), 'utf8', 'hex')
-                    + cipher.final('hex');
+                const key = await CryptoThen.pbkdf2(testSecret, testSalt, testIterations, 32, testDigest);
+                const expectedRedisValue = await CryptoThen.encrypt(JSON.stringify(givenJsonValue), key, cipherAlgorithm);
 
                 // when
                 await unitUnderTest.set(givenGroup, givenId, givenJsonValue);
@@ -90,11 +128,24 @@ describe('CredentialRepository', () => {
     });
     describe('with empty redis url', () => {
         beforeEach(() => {
-            unitUnderTest = new CredentialRepository('', testSecret);
+            unitUnderTest = new CredentialRepository('', testSecret, testSalt, testIterations, testDigest);
         });
         describe('constructor', () => {
             it('does not create a RedisClient', () => {
                 expect(redis.createClient)
+                    .toHaveBeenCalledTimes(0);
+            });
+        });
+        describe('start', () => {
+            it('does nothing', async () => {
+                spyOn(crypto, 'pbkdf2')
+                    .and.callThrough();
+
+                // when
+                await unitUnderTest.start();
+
+                // then
+                expect(crypto.pbkdf2)
                     .toHaveBeenCalledTimes(0);
             });
         });

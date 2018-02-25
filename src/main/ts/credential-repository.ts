@@ -1,12 +1,10 @@
 import {Inject, Service} from "typedi";
 import * as redis from 'redis';
 import {RedisClient} from 'redis';
-import * as crypto from 'crypto';
+import {CryptoThen} from "./crypto-then";
 const {promisify} = require('util');
 
 const cipherAlgorithm = 'aes256';
-const cipherPlaintextEncoding = 'utf8';
-const cipherCryptoEncoding = 'hex';
 
 @Service()
 export class CredentialRepository {
@@ -15,8 +13,12 @@ export class CredentialRepository {
     private hset;
     private hget;
     private hkeys;
+    private key: Buffer;
     constructor(@Inject("redisUrl") private redisUrl: string,
-                @Inject("secret") private secret: string) {
+                @Inject("secret") private secret: string,
+                @Inject("salt") private salt: string,
+                @Inject("iterations") private iterations: number,
+                @Inject("digest") private digest: string) {
         if (redisUrl !== '') {
             const redisClient = redis.createClient(redisUrl);
             this.hset = promisify(redisClient.hset).bind(redisClient);
@@ -24,6 +26,14 @@ export class CredentialRepository {
             this.hkeys = promisify(redisClient.hkeys).bind(redisClient);
             this.online = true;
         }
+    }
+
+    public start(): Promise<void> {
+        return !this.online
+            ? Promise.resolve()
+            : CryptoThen.pbkdf2(this.secret, this.salt, this.iterations, 32, this.digest)
+                .then(key => this.key = key)
+                .then(() => undefined)
     }
 
     public get(group: string, id: string): Promise<any> {
@@ -34,11 +44,11 @@ export class CredentialRepository {
 
             return Promise.resolve(result);
         }
-        const decipher = crypto.createDecipher(cipherAlgorithm, this.secret);
         return this.hget(group, id)
-            .then(encrypted => decipher.update(encrypted, cipherCryptoEncoding, cipherPlaintextEncoding)
-                + decipher.final(cipherPlaintextEncoding))
-            .then(JSON.parse);
+            .then(cipherTextAndIv =>
+                CryptoThen.decrypt(cipherTextAndIv, this.key, cipherAlgorithm))
+            .then(JSON.parse)
+            .catch(() => undefined);
     }
 
     public set(group: string, id: string, value: any): Promise<void> {
@@ -48,13 +58,8 @@ export class CredentialRepository {
             return Promise.resolve();
         }
         const stringValue = JSON.stringify(value);
-
-        const cipher = crypto.createCipher(cipherAlgorithm, this.secret);
-        const encryptedValue
-            = cipher.update(stringValue, cipherPlaintextEncoding, cipherCryptoEncoding)
-            + cipher.final(cipherCryptoEncoding);
-
-        return this.hset(group, id, encryptedValue);
+        return CryptoThen.encrypt(stringValue, this.key, cipherAlgorithm)
+            .then(ciphertext => this.hset(group, id, ciphertext));
     }
 
     public keys(group: string): Promise<string[]> {
