@@ -5,7 +5,7 @@ jobs:
     trigger: true
   - put: rpi-docker-image
     params:
-      build: source-code
+      build: app-source-code
 
 resources:
 - name: app-source-code

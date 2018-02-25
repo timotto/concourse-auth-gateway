@@ -21,6 +21,14 @@ spec:
           env:
           - name: REDIS_URL
             value: redis://redis-service:6379
+          - name: SECRET
+            value: {{.Values.credentialEncryption.secret}}
+          - name: SALT
+            value: {{.Values.credentialEncryption.salt}}
+          - name: DIGEST
+            value: {{.Values.credentialEncryption.digest}}
+          - name: ITERATIONS
+            value: {{.Values.credentialEncryption.iterations}}
           resources:
             limits:
               cpu: "0.5"

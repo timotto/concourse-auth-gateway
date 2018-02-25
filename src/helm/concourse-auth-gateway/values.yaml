@@ -2,3 +2,8 @@ replicas: 2
 imageRegistry: timotto
 imageName: concourse-auth-gateway
 redisDockerImage: redis
+credentialEncryption:
+  secret: changeme
+  salt: changeme
+  digest: sha512
+  iterations: 100000
