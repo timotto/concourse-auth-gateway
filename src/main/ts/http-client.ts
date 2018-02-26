@@ -4,14 +4,14 @@ import * as request from "request";
 @Service()
 export class HttpClient {
     public get(url: string, headers?: any): Promise<HttpResponse> {
-        return new Promise<HttpResponse>(((resolve, reject) => {
+        return new Promise<HttpResponse>((resolve, reject) => {
             request.get(url,
                 headers!==undefined?{headers: headers}:undefined,
                 (err, response: request.Response) =>
                     err
                         ?reject(err)
                         :resolve(HttpResponse.fromRequestResponse(response)));
-        }));
+        });
     }
 }
 
