@@ -1,17 +1,247 @@
 jobs:
-- name: build-rpi
+- name: test
   plan:
   - get: app-source-code
     trigger: true
+  - get: version
+    params:
+      pre: rc
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: node
+          tag: 8-alpine
+      inputs:
+      - name: app-source-code
+      caches:
+      - path: app-source-code/node_modules
+      run:
+        dir: app-source-code
+        path: sh
+        args:
+        - -exc
+        - |
+          yarn install
+          yarn test
+  - put: version
+    params:
+      file: version/version
+
+- name: build
+  plan:
+  - aggregate:
+    - get: app-source-code
+      trigger: true
+      passed: [test]
+    - get: version
+      passed: [test]
+  - put: docker-image
+    params:
+      build: app-source-code
+      tag: version/version
+      tag_prefix: v
+      tag_as_latest: false
+
+- name: build-rpi
+  plan:
+  - aggregate:
+    - get: app-source-code
+      trigger: true
+      passed: [test]
+    - get: version
+      passed: [test]
   - put: rpi-docker-image
     params:
       build: app-source-code
+      tag: version/version
+      tag_prefix: v
+      tag_as_latest: false
+
+- name: testflight
+  plan:
+  - aggregate:
+    - get: app-source-code
+      trigger: true
+      passed: [build]
+    - get: docker-image
+      trigger: true
+      passed: [build]
+    - get: rpi-docker-image
+      trigger: true
+      passed: [build-rpi]
+    - get: version
+      passed: [build,build-rpi]
+  - task: test
+    image: docker-image
+    config:
+      platform: linux
+      params: ((testflight))
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          # this script relies on the -c parameter
+
+          PORT=3030
+          URL=http://localhost:$PORT
+
+          apk update
+          apk add curl jq
+
+          cd /app
+          node dist &
+          pid=$!
+
+          echo "Waiting for app to start up on $URL"
+          i=3
+          while ! curl $URL/healthz; do
+            sleep 5
+            i=$(( $i - 1 ))
+            [ $i -gt 0 ]
+          done
+
+          echo "Verifying pipeline $PIPELINE of team $TEAM is not visible without credentials"
+          curl \
+            $URL/api/v1/teams/$TEAM/pipelines \
+          | jq \
+            -r '.[] | [.team_name,.name] | join("/")' \
+          > result1
+          cat result1
+          if grep "$TEAM/$PIPELINE" result1; then
+            echo "test not possible, pipeline is visible without credentials"
+            exit 1
+          else
+            true
+          fi
+
+          echo "Uploading credentials"
+          CREDENTIALS="$(echo -n "$USERNAME:$PASSWORD" | base64 | while read n; do echo -n $n ; done)"
+          cat > request-body.json <<EOT
+          { "concourseUrl": "$CONCOURSE_URL", "team": "$TEAM", "credentials": "Basic $CREDENTIALS" }
+          EOT
+          curl \
+            -X POST \
+            -H 'Content-type: application/json' \
+            -d@request-body.json \
+            $URL/_auth/basic
+
+          echo "Verifying pipeline $PIPELINE of team $TEAM is visible with credentials"
+          curl \
+            $URL/api/v1/teams/$TEAM/pipelines \
+          | jq \
+            -r '.[] | [.team_name,.name] | join("/")' \
+          | grep "$TEAM/$PIPELINE"
+
+- name: promote
+  plan:
+  - aggregate:
+    - get: app-source-code
+      trigger: true
+      passed: [testflight]
+    - get: docker-image-rc
+      resource: docker-image
+      trigger: true
+      passed: [testflight]
+      params:
+        save: true
+    - get: rpi-docker-image-rc
+      resource: rpi-docker-image
+      trigger: true
+      passed: [testflight]
+      params:
+        save: true
+    - get: version
+      passed: [testflight]
+      params:
+        bump: final
+  - aggregate:
+    - put: docker-image
+      params:
+        load: docker-image-rc
+        tag: version/version
+        tag_prefix: v
+        tag_as_latest: true
+    - put: rpi-docker-image
+      params:
+        load: rpi-docker-image-rc
+        tag: version/version
+        tag_prefix: v
+        tag_as_latest: true
+    - put: version
+      params:
+        file: version/version
+    - put: tagged-app-source-code
+      resource: app-source-code
+      params:
+        repository: app-source-code
+        tag: version/version
+        tag_prefix: v
+        only_tag: true
+    - task: prepare-release
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: alpine
+        inputs:
+        - name: version
+        outputs:
+        - name: release
+        run:
+          path: sh
+          args:
+          - -exc
+          - |
+            echo "Release $(cat version/version)" > release/release-name
+  - put: github-release
+    params:
+      name: release/release-name
+      tag: version/version
+      tag_prefix: v
+- name: bump-patch
+  serial_groups: [version]
+  plan:
+  - get: docker-image
+    trigger: true
+    passed: [promote]
+    params: {skip_download: true}
+  - get: rpi-docker-image
+    trigger: true
+    passed: [promote]
+    params: {skip_download: true}
+  - get: version
+    passed: [promote]
+    trigger: true
+  - put: version
+    params:
+      bump: patch
+
+- name: bump-minor
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: minor
+
+- name: bump-major
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: major
 
 resources:
 - name: app-source-code
   type: git
   source:
-    uri: https://github.com/timotto/concourse-auth-gateway.git
+    uri: git@github.com:timotto/concourse-auth-gateway.git
+    branch: master
+    private_key: ((git-key))
     paths:
     - src/main
     - package.json
@@ -21,6 +251,22 @@ resources:
     - Dockerfile
     - .eslintrc.yaml
 
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:timotto/concourse-auth-gateway.git
+    branch: version
+    file: version
+    private_key: ((git-key))
+
+- name: docker-image
+  type: docker-image
+  source:
+    repository: ((project-registry))/((image-name))
+    username: ((docker.username))
+    password: ((docker.password))
+
 - name: rpi-docker-image
   type: remote-docker-image
   source:
@@ -28,6 +274,13 @@ resources:
     username: ((docker.username))
     password: ((docker.password))
     dockerd: ((dockerd))
+
+- name: github-release
+  type: github-release
+  source:
+    owner: timotto
+    repository: concourse-auth-gateway
+    access_token: ((github-release-token))
 
 resource_types:
 - name: remote-docker-image
