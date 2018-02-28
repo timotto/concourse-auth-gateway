@@ -203,6 +203,7 @@ jobs:
       name: release/release-name
       tag: version/version
       tag_prefix: v
+
 - name: bump-patch
   serial_groups: [version]
   plan:
@@ -216,7 +217,6 @@ jobs:
     params: {skip_download: true}
   - get: version
     passed: [promote]
-    trigger: true
   - put: version
     params:
       bump: patch
