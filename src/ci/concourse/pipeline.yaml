@@ -142,6 +142,8 @@ jobs:
     - get: app-source-code
       trigger: true
       passed: [testflight]
+    - get: chart-source-code
+      trigger: true
     - get: docker-image-rc
       resource: docker-image
       trigger: true
@@ -198,11 +200,43 @@ jobs:
           - -exc
           - |
             echo "Release $(cat version/version)" > release/release-name
+    - task: build-chart
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: linkyard/concourse-helm-resource
+        inputs:
+        - name: version
+        - name: chart-source-code
+        outputs:
+        - name: chart
+        run:
+          path: sh
+          args:
+          - -exc
+          - |
+            echo "app version: $(cat version/version)"
+
+            echo "imageTag: v$(cat version/version)" \
+            >> chart-source-code/src/helm/concourse-auth-gateway/values.yaml
+
+            cat chart-source-code/src/helm/concourse-auth-gateway/values.yaml
+
+            helm init --client-only
+
+            helm package \
+              --destination chart \
+              chart-source-code/src/helm/concourse-auth-gateway
+
   - put: github-release
     params:
       name: release/release-name
       tag: version/version
       tag_prefix: v
+      globs:
+      - chart/*
 
 - name: bump-patch
   serial_groups: [version]
@@ -250,6 +284,14 @@ resources:
     - jasmine.json
     - Dockerfile
     - .eslintrc.yaml
+
+- name: chart-source-code
+  type: git
+  source:
+    uri: https://github.com/timotto/concourse-auth-gateway.git
+    branch: master
+    paths:
+    - src/helm
 
 - name: version
   type: semver
