@@ -1,3 +1,4 @@
+{{- if .Values.ingress.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -6,9 +7,10 @@ metadata:
     app: concourse-auth-gateway
 spec:
   rules:
-  - host: {{ .Values.ingressHostname }}
+  - host: {{ .Values.ingress.hostname }}
     http:
       paths:
       - backend:
           serviceName: concourse-auth-gateway
           servicePort: 3001
+{{- end}}

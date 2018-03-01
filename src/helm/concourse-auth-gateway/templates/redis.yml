@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: {{.Values.redisDockerImage}}
+          image: {{.Values.redisImage.repo}}
           imagePullPolicy: Always
           resources:
             limits:

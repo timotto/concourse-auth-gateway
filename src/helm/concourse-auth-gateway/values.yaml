@@ -1,9 +1,14 @@
 replicas: 2
-imageRegistry: timotto
-imageName: concourse-auth-gateway
+imageName: timotto/concourse-auth-gateway
+imagepullPolicy: Always
 redisDockerImage: redis
 credentialEncryption:
   secret: changeme
   salt: changeme
   digest: sha512
   iterations: 100000
+ingress:
+  hostname: concourse-auth-gateway
+  enabled: true
+service:
+  type: NodePort

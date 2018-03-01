@@ -5,7 +5,7 @@ metadata:
   labels:
     app: concourse-auth-gateway
 spec:
-  type: {{ .Values.serviceType }}
+  type: {{ .Values.service.type }}
   ports:
   - port: 3001
     targetPort: 3001
