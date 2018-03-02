@@ -28,7 +28,6 @@
     "nodemon": "^1.12.1",
     "nyc": "^11.4.1",
     "supertest": "^3.0.0",
-    "typescript": "^2.5.2",
     "typescript-eslint-parser": "^14.0.0",
     "yarn": "^1.1.0"
   },
@@ -42,7 +41,8 @@
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "request-promise-native": "^1.0.5",
-    "typedi": "^0.7.0"
+    "typedi": "^0.7.0",
+    "typescript": "^2.5.2"
   },
   "license": "Apache-2.0"
 }
