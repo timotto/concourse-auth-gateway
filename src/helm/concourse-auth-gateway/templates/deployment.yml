@@ -15,7 +15,7 @@ spec:
       containers:
         - name: concourse-auth-gateway
           image: {{.Values.imageName}}:{{.Values.imageTag}}
-          imagePullPolicy: {{.Values.image.pullPolicy}}
+          imagePullPolicy: {{.Values.imagePullPolicy}}
           env:
           - name: REDIS_URL
             value: redis://redis-service:6379
