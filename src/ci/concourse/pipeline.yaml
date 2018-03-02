@@ -53,7 +53,7 @@ jobs:
       passed: [test]
     - get: version
       passed: [test]
-  - put: rpi-docker-image
+  - put: docker-image-rpi
     params:
       build: app-source-code
       tag: version/version
@@ -69,7 +69,7 @@ jobs:
     - get: docker-image
       trigger: true
       passed: [build]
-    - get: rpi-docker-image
+    - get: docker-image-rpi
       trigger: true
       passed: [build-rpi]
     - get: version
@@ -150,8 +150,8 @@ jobs:
       passed: [testflight]
       params:
         save: true
-    - get: rpi-docker-image-rc
-      resource: rpi-docker-image
+    - get: docker-image-rpi-rc
+      resource: docker-image-rpi
       trigger: true
       passed: [testflight]
       params:
@@ -167,9 +167,9 @@ jobs:
         tag: version/version
         tag_prefix: v
         tag_as_latest: true
-    - put: rpi-docker-image
+    - put: docker-image-rpi
       params:
-        load: rpi-docker-image-rc
+        load: docker-image-rpi-rc
         tag: version/version
         tag_prefix: v
         tag_as_latest: true
@@ -245,7 +245,7 @@ jobs:
     trigger: true
     passed: [promote]
     params: {skip_download: true}
-  - get: rpi-docker-image
+  - get: docker-image-rpi
     trigger: true
     passed: [promote]
     params: {skip_download: true}
@@ -309,7 +309,7 @@ resources:
     username: ((docker.username))
     password: ((docker.password))
 
-- name: rpi-docker-image
+- name: docker-image-rpi
   type: remote-docker-image
   source:
     repository: ((project-registry))/((rpi-image-name))
