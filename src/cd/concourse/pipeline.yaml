@@ -1,0 +1,42 @@
+jobs:
+- name: deploy
+  plan:
+  - get: release
+    trigger: true
+  - put: production
+    params:
+      chart: release/concourse-auth-gateway-0.0.1.tgz
+      wait_until_ready: 120
+      replace: true
+      override_values:
+      - key: credentialEncryption.secret
+        value: ((secret))
+      - key: credentialEncryption.salt
+        value: ((salt))
+      - key: imageName
+        value: ((imageName))
+      - key: redisDockerImage
+        value: ((redisDockerImage))
+      - key: ingressHostname
+        value: ((ingressHostname))
+      - key: ingress.enabled
+        value: ((ingressEnabled))
+      - key: service.type
+        value: ((serviceType))
+
+resources:
+- name: release
+  type: github-release
+  source:
+    owner: timotto
+    repository: concourse-auth-gateway
+    access_token: ((github-release-token))
+- name: production
+  type: helm
+  source: ((cluster))
+
+resource_types:
+- name: helm
+  type: docker-image
+  source:
+    repository: linkyard/concourse-helm-resource
