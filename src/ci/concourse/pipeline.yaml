@@ -65,7 +65,7 @@ jobs:
   - aggregate:
     - get: app-source-code
       trigger: true
-      passed: [build]
+      passed: [build,build-rpi]
     - get: docker-image
       trigger: true
       passed: [build]
