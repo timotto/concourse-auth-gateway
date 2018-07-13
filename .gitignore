@@ -5,3 +5,6 @@ dist/
 secrets.yml
 **/*.iml
 **/secrets.yaml
+credentials.json
+.nyc_output
+coverage
