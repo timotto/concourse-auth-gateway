@@ -4,12 +4,11 @@ ADD . /build
 
 WORKDIR /build
 
-RUN npm install -g yarn && \
-    yarn install && \
-    yarn run test && \
-    yarn run tsc && \
+RUN npm install && \
+    npm run test && \
+    npm run tsc && \
     rm -rf node_modules/ && \
-    yarn install --production=true
+    npm install --production=true
 
 FROM node:slim AS runtime
 
