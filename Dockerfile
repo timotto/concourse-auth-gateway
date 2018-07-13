@@ -1,4 +1,4 @@
-FROM node:alpine AS build
+FROM node:slim AS build
 
 ADD . /build
 
@@ -11,7 +11,7 @@ RUN npm install -g yarn && \
     rm -rf node_modules/ && \
     yarn install --production=true
 
-FROM node:alpine AS runtime
+FROM node:slim AS runtime
 
 COPY --from=build /build /app
 
