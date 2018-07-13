@@ -27,6 +27,7 @@ spec:
             value: {{.Values.credentialEncryption.digest}}
           - name: ITERATIONS
             value: {{.Values.credentialEncryption.iterations | quote}}
+{{ toYaml .Values.env | indent 10 }}
           resources:
             limits:
               cpu: "0.5"
