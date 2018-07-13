@@ -12,5 +12,5 @@ spec:
       paths:
       - backend:
           serviceName: concourse-auth-gateway
-          servicePort: 3001
+          servicePort: {{ .Values.service.port }}
 {{- end}}

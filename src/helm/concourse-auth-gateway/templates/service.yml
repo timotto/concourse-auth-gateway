@@ -7,7 +7,7 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-  - port: 3001
+  - port: {{ .Values.service.port }}
     targetPort: 3001
     protocol: TCP
     name: http

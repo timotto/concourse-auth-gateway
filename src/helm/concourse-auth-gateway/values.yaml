@@ -9,6 +9,7 @@ credentialEncryption:
   iterations: 100000
 ingress:
   hostname: concourse-auth-gateway
-  enabled: true
+  enabled: false
 service:
-  type: NodePort
+  type: ClusterIP
+  port: 80
