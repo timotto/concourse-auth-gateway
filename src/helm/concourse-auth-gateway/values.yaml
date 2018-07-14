@@ -13,4 +13,7 @@ ingress:
 service:
   type: ClusterIP
   port: 80
+redis:
+  enabled: true
+  external: false
 env:
