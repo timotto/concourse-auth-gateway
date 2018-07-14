@@ -27,6 +27,7 @@ export class ExpressApp {
 
     private useApp() {
         this.app.use(bodyParser.json());
+        this.app.use(bodyParser.urlencoded());
         this.app.use("/healthz", this.healthEndpoint.router);
         this.app.use("/_auth", this.credentialEndpoint.router);
         this.app.use("/", this.concourseEndpoint2.router);

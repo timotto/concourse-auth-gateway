@@ -4,6 +4,7 @@ import {ConcourseEndpoint2} from "./concourse-endpoint2";
 import any = jasmine.any;
 import {CredentialEndpoint} from "./credential-endpoint";
 import {CredentialRepository} from "./credential-repository";
+import * as bodyParser from 'body-parser';
 
 describe('ExpressApp', () => {
 
@@ -47,6 +48,22 @@ describe('ExpressApp', () => {
             await unitUnderTest.start();
             expect((unitUnderTest as any).app.listen)
                 .toHaveBeenCalledWith(port, any(Function));
+        });
+        it('uses bodyParser.json()', async () => {
+            const fake = {};
+            spyOnProperty(bodyParser, 'json').and.returnValue(() => fake);
+            await unitUnderTest.start();
+            
+            expect((unitUnderTest as any).app.use)
+                .toHaveBeenCalledWith(fake);
+        });
+        it('uses bodyParser.urlencoded()', async () => {
+            const fake = {};
+            spyOnProperty(bodyParser, 'urlencoded').and.returnValue(() => fake);
+            await unitUnderTest.start();
+            
+            expect((unitUnderTest as any).app.use)
+                .toHaveBeenCalledWith(fake);
         });
     });
 });
