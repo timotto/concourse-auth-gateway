@@ -17,6 +17,10 @@ spec:
           image: {{.Values.imageName}}:{{.Values.imageTag}}
           imagePullPolicy: {{.Values.imagePullPolicy}}
           env:
+{{- if .Values.concourseUrl }}
+          - name: CONCOURSE_URL
+            value: {{ .Values.concourseUrl }}
+{{- end }}
           - name: REDIS_URL
             value: redis://redis-service:6379
           - name: SECRET
