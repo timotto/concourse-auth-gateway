@@ -24,8 +24,8 @@ jobs:
         args:
         - -exc
         - |
-          yarn install
-          yarn test
+          npm install
+          npm test
   - put: version
     params:
       file: version/version
@@ -273,7 +273,7 @@ resources:
     paths:
     - src/main
     - package.json
-    - yarn.lock
+    - package-lock.json
     - tsconfig.json
     - jasmine.json
     - Dockerfile
