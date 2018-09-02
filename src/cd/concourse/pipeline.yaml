@@ -9,10 +9,17 @@ jobs:
       wait_until_ready: 120
       replace: true
       override_values:
+      - key: concourseUrl
+        value: ((concourseUrl))
       - key: credentialEncryption.secret
         value: ((secret))
+        hide: true
       - key: credentialEncryption.salt
         value: ((salt))
+        hide: true
+      - key: credentialEncryption.iterations
+        value: ((iterations))
+        hide: true
       - key: imageName
         value: ((imageName))
       - key: redisDockerImage
