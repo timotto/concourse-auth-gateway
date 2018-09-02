@@ -143,16 +143,13 @@ jobs:
       trigger: true
       passed: [testflight]
     - get: chart-source-code
-      trigger: true
     - get: docker-image-rc
       resource: docker-image
-      trigger: true
       passed: [testflight]
       params:
         save: true
     - get: docker-image-rpi-rc
       resource: docker-image-rpi
-      trigger: true
       passed: [testflight]
       params:
         save: true
