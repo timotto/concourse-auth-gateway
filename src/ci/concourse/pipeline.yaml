@@ -89,8 +89,8 @@ jobs:
           PORT=3030
           URL=http://localhost:$PORT
 
-          apk update
-          apk add curl jq
+          apt-get update
+          apt-get install -y curl jq
 
           cd /app
           node dist &
