@@ -263,6 +263,8 @@ jobs:
 
 resources:
 - name: app-source-code
+  webhook_token: ((webhook_token.source_code))
+  check_every: 24h
   type: git
   source:
     uri: git@github.com:timotto/concourse-auth-gateway.git
@@ -279,6 +281,8 @@ resources:
     - src/helm
 
 - name: chart-source-code
+  webhook_token: ((webhook_token.chart_source_code))
+  check_every: 24h
   type: git
   source:
     uri: https://github.com/timotto/concourse-auth-gateway.git
