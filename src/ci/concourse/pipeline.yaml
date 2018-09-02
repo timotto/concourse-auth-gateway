@@ -303,6 +303,7 @@ resources:
   type: docker-image
   source:
     repository: ((project-registry))/((image-name))
+    tag: latest
     username: ((docker.username))
     password: ((docker.password))
 
@@ -310,6 +311,7 @@ resources:
   type: remote-docker-image
   source:
     repository: ((project-registry))/((rpi-image-name))
+    tag: latest
     username: ((docker.username))
     password: ((docker.password))
     dockerd: ((dockerd))
@@ -326,4 +328,5 @@ resource_types:
   type: docker-image
   source:
     repository: timotto/docker-image-resource
+    tag: latest
   privileged: true
