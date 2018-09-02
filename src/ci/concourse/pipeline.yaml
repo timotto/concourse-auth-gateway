@@ -119,15 +119,14 @@ jobs:
           fi
 
           echo "Uploading credentials"
-          CREDENTIALS="$(echo -n "$USERNAME:$PASSWORD" | base64 | while read n; do echo -n $n ; done)"
           cat > request-body.json <<EOT
-          { "concourseUrl": "$CONCOURSE_URL", "team": "$TEAM", "credentials": "Basic $CREDENTIALS" }
+          { "concourseUrl": "$CONCOURSE_URL", "team": "$TEAM", "token": "Bearer $TOKEN" }
           EOT
           curl \
             -X POST \
             -H 'Content-type: application/json' \
             -d@request-body.json \
-            $URL/_auth/basic
+            $URL/_auth/token
 
           echo "Verifying pipeline $PIPELINE of team $TEAM is visible with credentials"
           curl \
