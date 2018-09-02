@@ -137,6 +137,25 @@ describe('ConcourseProxy', () => {
 
             expect(scope.isDone()).toBeTruthy();
         });
+        it('sets the Authorization: Bearer header if an ATC token was found in the CredentialService', async () => {
+            const expectedPath = `/api/v1/teams/${mockTeam}/pipelines`;
+            const validToken = 'Bearer token';
+
+            const expectedHeaders = { 'Authorization': validToken };
+            const scope = nock(mockConcourseUrl, {reqheaders: expectedHeaders})
+                .get(expectedPath)
+                .reply(200, 'OK');
+
+            spyOn(credentialRepository2, 'loadAtcToken')
+                .and.returnValue(Promise.resolve(validToken));
+
+            mockRequest.request.url = expectedPath;
+            mockRequest.request.headers = {'x-concourse-url': mockConcourseUrl};
+
+            await unitUnderTest.proxyRequest(mockRequest);
+
+            expect(scope.isDone()).toBeTruthy();
+        });
         it('calls ConcourseResponseParse.parseConcourseResponse with the response of Concourse', async () => {
             const expectedPath = `/api/v1/teams/${mockTeam}/pipelines`;
 
