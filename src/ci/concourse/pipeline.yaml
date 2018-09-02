@@ -276,6 +276,7 @@ resources:
     - jasmine.json
     - Dockerfile
     - .eslintrc.yaml
+    - src/helm
 
 - name: chart-source-code
   type: git
