@@ -21,7 +21,7 @@ spec:
           - name: CONCOURSE_URL
             value: {{ .Values.concourseUrl }}
 {{- end }}
-{{- if .Values.redis.enabled || .Values.redis.external}}
+{{- if (.Values.redis.enabled) or .Values.redis.external}}
           - name: REDIS_URL
 {{- if .Values.redis.external}}
             value: {{.Values.redis.externalRedisUrl}}
