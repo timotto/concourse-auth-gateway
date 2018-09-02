@@ -241,14 +241,9 @@ jobs:
 - name: bump-patch
   serial_groups: [version]
   plan:
-  - get: docker-image
+  - get: app-source-code
     trigger: true
     passed: [promote]
-    params: {skip_download: true}
-  - get: docker-image-rpi
-    trigger: true
-    passed: [promote]
-    params: {skip_download: true}
   - get: version
     passed: [promote]
   - put: version
