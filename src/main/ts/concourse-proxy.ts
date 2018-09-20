@@ -1,19 +1,20 @@
-import {Service} from "typedi";
-import {ParsedConcourseRequest} from "./concourse-request-parser";
-import {ConcourseResponseParser, ParsedConcourseResponse} from "./concourse-response-parser";
-import {CredentialService} from "./credential-service";
-import {Util} from "./util";
-import {HttpClient, HttpResponse} from "./http-client";
+import { Service } from "typedi";
+import { ParsedConcourseRequest } from "./concourse-request-parser";
+import { ConcourseResponseParser, ParsedConcourseResponse } from "./concourse-response-parser";
+import { CredentialService } from "./credential-service";
+import { Util } from "./util";
+import { HttpClient, HttpResponse } from "./http-client";
 
+const mergeResponseUrls: string[] = ['/api/v1/pipelines', '/api/v1/resources', '/api/v1/jobs'];
 @Service()
 export class ConcourseProxy {
 
     constructor(private credentialRepository: CredentialService,
-                private httpClient: HttpClient) {
+        private httpClient: HttpClient) {
     }
 
     public proxyRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
-        if (req.request.url === '/api/v1/pipelines')
+        if (mergeResponseUrls.indexOf(req.request.url) !== -1)
             return this.proxyPipelinesRequest(req);
 
         return this.proxyGenericRequest(req);
@@ -21,7 +22,7 @@ export class ConcourseProxy {
 
     private proxyPipelinesRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
         return this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
-            .then(tokens => tokens.concat([{token: undefined}])
+            .then(tokens => tokens.concat([{ token: undefined }])
                 .map(pair => ConcourseProxy.createHeaders(req, pair.token))
                 .map(options => this.httpClient.get(`${req.concourseUrl}${req.request.url}`, options)))
             .then(promises => Promise.all(promises))
@@ -36,6 +37,7 @@ export class ConcourseProxy {
         let parsedBodyB: any;
         try { parsedBodyB = JSON.parse(b.body); }
         catch (e) { parsedBodyB = []; }
+        if (parsedBodyB === null) parsedBodyB = [];
 
         a.body = JSON.stringify(Util.uniqueById(parsedBodyA, parsedBodyB));
 
