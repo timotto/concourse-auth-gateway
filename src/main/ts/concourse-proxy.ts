@@ -21,7 +21,11 @@ export class ConcourseProxy {
     }
 
     private proxyPipelinesRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
-        return this.credentialRepository.loadAllAtcTokens(req.concourseUrl)
+        return this.parseTeamFromHeaders(req)
+            .then(maybeTeam => maybeTeam
+                ? this.credentialRepository.loadAtcToken(req.concourseUrl, maybeTeam)
+                    .then(singleToken => [singleToken])
+                : this.credentialRepository.loadAllAtcTokens(req.concourseUrl))
             .then(tokens => tokens.concat([{ token: undefined }])
                 .map(pair => ConcourseProxy.createHeaders(req, pair.token))
                 .map(options => this.httpClient.get(`${req.concourseUrl}${req.request.url}`, options)))
@@ -29,6 +33,14 @@ export class ConcourseProxy {
             .then(responses => responses.reduce(ConcourseProxy.mergeResponseBodies))
             .then((mergedResponse: HttpResponse) =>
                 ConcourseResponseParser.parseConcourseResponse(mergedResponse))
+    }
+
+    private async parseTeamFromHeaders(req: ParsedConcourseRequest): Promise<string|undefined> {
+        if (!req.request.headers.referer) return undefined;
+        const teamMatch = req.request.headers.referer.match('\\?team=(.*)$');
+        return teamMatch
+            ? teamMatch[1]
+            : undefined;
     }
 
     private static mergeResponseBodies(a: HttpResponse, b: HttpResponse): HttpResponse {

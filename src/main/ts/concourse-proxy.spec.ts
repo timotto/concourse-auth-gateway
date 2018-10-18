@@ -18,7 +18,7 @@ describe('ConcourseProxy', () => {
         credentialRepository2 = new CredentialService(httpClient, undefined);
         unitUnderTest = new ConcourseProxy(credentialRepository2, httpClient);
         mockRequest = new ParsedConcourseRequest(undefined, mockConcourseUrl, mockTeam, undefined);
-        mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);
+        mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url', 'headers']);
     });
     afterEach(() => {
         nock.cleanAll();
@@ -197,26 +197,32 @@ describe('ConcourseProxy', () => {
             expect(credentialRepository2.saveAtcToken).toHaveBeenCalledWith(mockConcourseUrl, mockTeam, expectedToken);
         });
         ['/api/v1/pipelines', '/api/v1/jobs', '/api/v1/resources'].forEach(path => describe(`on path ${path}`, () => {
-            it('calls the URL with all known credentials for that Concourse URL', async () => {
-                const expectedTeam1 = {team: 'team1', token: 'token 1'};
-                const expectedTeam2 = {team: 'team2', token: 'token 2'};
-                const expectedTeams = [expectedTeam1, expectedTeam2];
-                spyOn(credentialRepository2, 'loadAllAtcTokens')
-                    .and.returnValue(Promise.resolve(expectedTeams));
+            [{description: 'with no referrer', referer: undefined}, {description: 'with referrer without team query parameter', referer: 'something'}]
+                .forEach(pair => describe(pair.description, () => {
+                    beforeEach(() => {
+                        mockRequest.request.headers.referer = pair.referer;
+                    });
+                    it('calls the URL with all known credentials for that Concourse URL', async () => {
+                        const expectedTeam1 = {team: 'team1', token: 'token 1'};
+                        const expectedTeam2 = {team: 'team2', token: 'token 2'};
+                        const expectedTeams = [expectedTeam1, expectedTeam2];
+                        spyOn(credentialRepository2, 'loadAllAtcTokens')
+                            .and.returnValue(Promise.resolve(expectedTeams));
 
-                mockRequest.request.url = path;
-                const scope = nock(mockConcourseUrl);
-                expectedTeams.forEach(team =>
-                    scope.get(mockRequest.request.url, undefined, {reqheaders: {'Cookie':`ATC-Authorization="${team.token}"`}})
-                        .reply(200, []));
+                        mockRequest.request.url = path;
+                        const scope = nock(mockConcourseUrl);
+                        expectedTeams.forEach(team =>
+                            scope.get(mockRequest.request.url, undefined, {reqheaders: {'Cookie':`ATC-Authorization="${team.token}"`}})
+                                .reply(200, []));
 
-                scope.get(mockRequest.request.url)
-                    .reply(200, []);
+                        scope.get(mockRequest.request.url)
+                            .reply(200, []);
 
-                await unitUnderTest.proxyRequest(mockRequest);
+                        await unitUnderTest.proxyRequest(mockRequest);
 
-                expect(scope.isDone()).toBeTruthy();
-            });
+                        expect(scope.isDone()).toBeTruthy();
+                    });
+            }))
             it('merges the responses into a single set', async () => {
                 const expectedTeam1 = {team: 'team1', token: 'token 1', response: [{id:'a'},{id:'b'}]};
                 const expectedTeam2 = {team: 'team2', token: 'token 2', response: [{id:'a'},{id:'b'},{id:'c'},{id:'d'}]};
@@ -274,6 +280,32 @@ describe('ConcourseProxy', () => {
 
                         expect(count).toEqual(1);
                     })
+            });
+            describe('with a referer with a "team" query parameter', () => {
+                let expectedTeam = 'expected-team';
+                beforeEach(() => {
+                    mockRequest.request.headers = {referer: `http://the-url/?team=${expectedTeam}`};
+                });
+                it('calls the URL with the credentials for the given team only', async () => {
+                    const expectedToken = 'expected token';
+                    const expectedTeam1 = {team: expectedTeam, token: expectedToken};
+                    spyOn(credentialRepository2, 'loadAllAtcTokens').and.returnValue(Promise.resolve([]));
+                    spyOn(credentialRepository2, 'loadAtcToken').and.returnValue(Promise.resolve(expectedToken));
+
+                    mockRequest.request.url = path;
+                    const scope = nock(mockConcourseUrl);
+                    scope.get(mockRequest.request.url, undefined, {reqheaders: {'Cookie':`ATC-Authorization="${expectedTeam1.token}"`}})
+                        .reply(200, []);
+
+                    scope.get(mockRequest.request.url)
+                        .reply(200, []);
+
+                    await unitUnderTest.proxyRequest(mockRequest);
+
+                    expect(credentialRepository2.loadAllAtcTokens).not.toHaveBeenCalled();
+                    expect(credentialRepository2.loadAtcToken).toHaveBeenCalledWith(mockConcourseUrl, expectedTeam);
+                    expect(scope.isDone()).toBeTruthy();
+                });
             });
         }));
         it('goes on without ATC bearer token if the load operation was rejected', async () => {
