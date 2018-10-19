@@ -14,6 +14,9 @@ export class ConcourseProxy {
     }
 
     public proxyRequest(req: ParsedConcourseRequest): Promise<ParsedConcourseResponse> {
+        if (req.request.url.match('/api/v1/teams/.*/pipelines/.*/config'))
+            return Promise.resolve(new ParsedConcourseResponse({statusCode: 403, statusMessage: 'forbidden'}));
+
         if (mergeResponseUrls.indexOf(req.request.url) !== -1)
             return this.proxyPipelinesRequest(req);
 

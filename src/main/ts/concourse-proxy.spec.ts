@@ -308,6 +308,29 @@ describe('ConcourseProxy', () => {
                 });
             });
         }));
+        it('denies access to the "get-pipeline" endpoint', async () => {
+            const unexpectedResponse = 'you should not see this';
+            // stub
+            nock(mockConcourseUrl)
+                .get('/api/v1/teams/given-team/pipelines/given-pipeline/config')
+                .reply(200, unexpectedResponse);
+
+            // spy
+            spyOn(credentialRepository2, 'loadAtcToken')
+                .and.returnValue(Promise.resolve('token'));
+
+            // given
+            mockRequest.request = jasmine.createSpyObj<Request>('Request', ['url']);
+            mockRequest.request.url = '/api/v1/teams/given-team/pipelines/given-pipeline/config';
+
+            // when
+            const actualResponse = await unitUnderTest.proxyRequest(mockRequest);
+
+            // then
+            expect(actualResponse.response.body).not.toEqual(unexpectedResponse);
+            expect(actualResponse.response.statusCode).toEqual(403);
+            expect(nock.isDone()).toBe(false);
+        });
         it('goes on without ATC bearer token if the load operation was rejected', async () => {
             const expectedResponse = 'OK';
             // stub
