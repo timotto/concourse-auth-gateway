@@ -27,7 +27,7 @@ export class ConcourseProxy {
         return this.parseTeamFromHeaders(req)
             .then(maybeTeam => maybeTeam
                 ? this.credentialRepository.loadAtcToken(req.concourseUrl, maybeTeam)
-                    .then(singleToken => [singleToken])
+                    .then(singleToken => [{team: maybeTeam, token: singleToken}])
                 : this.credentialRepository.loadAllAtcTokens(req.concourseUrl))
             .then(tokens => tokens.concat([{ token: undefined }])
                 .map(pair => ConcourseProxy.createHeaders(req, pair.token))
