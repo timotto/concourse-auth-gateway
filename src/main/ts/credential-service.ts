@@ -38,7 +38,8 @@ export class CredentialService {
             .then(atcToken => this.assertAtcToken(concourseUrl, team, atcToken));
     }
 
-    public loadAllAtcTokens(concourseUrl: string): Promise<any[]> {
+    public loadAllAtcTokens(concourseUrlMaybeWithSlash: string): Promise<any[]> {
+        const concourseUrl = removeTrailingSlash(concourseUrlMaybeWithSlash);
         const loader = group => this.credentialRepository.keys(group)
             .then(keys => keys
             .map(k => JSON.parse(k))
@@ -108,4 +109,6 @@ const assertStringValue = (stringValue: string, description: string): Promise<vo
         :Promise.resolve();
 
 const mergeKeyPair = (concourseUrl: string, team: string): string =>
-    JSON.stringify({url: concourseUrl, team: team});
+    JSON.stringify({url: removeTrailingSlash(concourseUrl), team: team});
+
+const removeTrailingSlash = (url: string) => url.replace(/\/$/, '');

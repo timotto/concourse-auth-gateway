@@ -49,6 +49,12 @@ describe('CredentialService', () => {
                 .then(() => fail(`credential value [${credential}] should have been rejected`))
                 .catch(e => expect(e).toBeDefined()));
         });
+        it('does not care about trailing slashes when comparing URLs', async () => {
+            await unitUnderTest.saveAuthenticationCredentials(`${validConcourseUrl}/`, validTeam, validCredentials);
+            const actualCredentials = await unitUnderTest.loadAuthenticationCredentials(validConcourseUrl, validTeam);
+
+            expect(actualCredentials).toEqual(validCredentials);
+        });
     });
     describe('loadAuthenticationCredentials', () => {
         it('rejects the promise if the URL is invalid', async () => {
@@ -76,6 +82,12 @@ describe('CredentialService', () => {
             const actualResult = await instance2.loadAuthenticationCredentials(validConcourseUrl, validTeam);
             expect(actualResult).toEqual(validCredentials);
         });
+        it('does not care about trailing slashes when comparing URLs', async () => {
+            await unitUnderTest.saveAuthenticationCredentials(validConcourseUrl, validTeam, validCredentials);
+            const actualCredentials = await unitUnderTest.loadAuthenticationCredentials(`${validConcourseUrl}/`, validTeam);
+
+            expect(actualCredentials).toEqual(validCredentials);
+        });
     });
     describe('saveAtcToken', () => {
         it('rejects the promise if the URL is invalid', async () => {
@@ -95,6 +107,12 @@ describe('CredentialService', () => {
                 .saveAtcToken(validConcourseUrl, validTeam, token)
                 .then(() => fail(`credential value [${token}] should have been rejected`))
                 .catch(e => expect(e).toBeDefined()));
+        });
+        it('does not care about trailing slashes when comparing URLs', async () => {
+            await unitUnderTest.saveAtcToken(`${validConcourseUrl}/`, validTeam, validToken);
+            const actualToken = await unitUnderTest.loadAtcToken(validConcourseUrl, validTeam);
+
+            expect(actualToken).toEqual(validToken);
         });
     });
     describe('loadAtcToken', () => {
@@ -137,6 +155,12 @@ describe('CredentialService', () => {
             expect(unitUnderTest.assertAtcToken)
                 .toHaveBeenCalledWith(validConcourseUrl, validTeam, validToken);
         });
+        it('does not care about trailing slashes when comparing URLs', async () => {
+            await unitUnderTest.saveAtcToken(validConcourseUrl, validTeam, validToken);
+            const actualToken = await unitUnderTest.loadAtcToken(`${validConcourseUrl}/`, validTeam);
+
+            expect(actualToken).toEqual(validToken);
+        });
     });
     describe('loadAllAtcTokens', () => {
         it('returns all saved team, atcToken pairs for the given concourseUrl', async () => {
@@ -172,6 +196,15 @@ describe('CredentialService', () => {
             // then
             expect(unitUnderTest.loadAtcToken).toHaveBeenCalledWith(validConcourseUrl, validTeam);
             expect(unitUnderTest.loadAtcToken).toHaveBeenCalledWith(validConcourseUrl, differentTeam);
+        });
+        it('does not care about trailing slashes when comparing URLs', async () => {
+            await unitUnderTest.saveAtcToken(validConcourseUrl, validTeam, validToken);
+            const actualTokens = await unitUnderTest.loadAllAtcTokens(`${validConcourseUrl}/`);
+            expect(actualTokens[0].token).toEqual(validToken);
+
+            await unitUnderTest.saveAtcToken(`${validConcourseUrl2}/`, validTeam, validToken2);
+            const actualTokens2 = await unitUnderTest.loadAllAtcTokens(validConcourseUrl2);
+            expect(actualTokens2[0].token).toEqual(validToken2);
         });
     });
     describe('requestAtcToken', () => {
