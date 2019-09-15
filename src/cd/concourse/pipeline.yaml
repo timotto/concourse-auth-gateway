@@ -24,7 +24,7 @@ jobs:
         value: ((imageName))
       - key: redisDockerImage
         value: ((redisDockerImage))
-      - key: ingressHostname
+      - key: ingress.hostname
         value: ((ingressHostname))
       - key: ingress.enabled
         value: ((ingressEnabled))
@@ -40,10 +40,16 @@ resources:
     access_token: ((github-release-token))
 - name: production
   type: helm
-  source: ((cluster))
+  source:
+    admin_cert: ((helm-rpi.admin_cert))
+    admin_key: ((helm-rpi.admin_key))
+    cluster_ca: ((helm-rpi.cluster_ca))
+    cluster_url: ((helm-rpi.cluster_url))
+    namespace: ((cluster.namespace))
+    release: ((cluster.release))
 
 resource_types:
 - name: helm
-  type: docker-image
+  type: registry-image
   source:
     repository: linkyard/concourse-helm-resource

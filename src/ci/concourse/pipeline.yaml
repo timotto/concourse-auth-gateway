@@ -10,7 +10,7 @@ jobs:
     config:
       platform: linux
       image_resource:
-        type: docker-image
+        type: registry-image
         source:
           repository: node
           tag: 8-alpine
@@ -32,7 +32,7 @@ jobs:
 
 - name: build
   plan:
-  - aggregate:
+  - in_parallel:
     - get: app-source-code
       trigger: true
       passed: [test]
@@ -47,7 +47,7 @@ jobs:
 
 - name: build-rpi
   plan:
-  - aggregate:
+  - in_parallel:
     - get: app-source-code
       trigger: true
       passed: [test]
@@ -62,7 +62,7 @@ jobs:
 
 - name: testflight
   plan:
-  - aggregate:
+  - in_parallel:
     - get: app-source-code
       trigger: true
       passed: [build,build-rpi]
@@ -79,10 +79,10 @@ jobs:
     config:
       platform: linux
       params:
-        CONCOURSE_URL: ((test_concourse_url))
-        PIPELINE: ((test_pipeline))
-        TEAM: ((test_team))
-        TOKEN: ((test_token))
+        CONCOURSE_URL: ((test.concourse_url))
+        PIPELINE: ((test.pipeline))
+        TEAM: ((test.team))
+        TOKEN: ((test.token))
       run:
         path: sh
         args:
@@ -132,7 +132,7 @@ jobs:
 
 - name: promote
   plan:
-  - aggregate:
+  - in_parallel:
     - get: app-source-code
       trigger: true
       passed: [testflight]
@@ -151,7 +151,7 @@ jobs:
       passed: [testflight]
       params:
         bump: final
-  - aggregate:
+  - in_parallel:
     - put: docker-image
       params:
         load: docker-image-rc
@@ -195,7 +195,7 @@ jobs:
       config:
         platform: linux
         image_resource:
-          type: docker-image
+          type: registry-image
           source:
             repository: linkyard/concourse-helm-resource
         inputs:
@@ -257,7 +257,7 @@ jobs:
 
 resources:
 - name: app-source-code
-  webhook_token: ((webhook_token_source_code))
+  webhook_token: ((webhook_token.source_code))
   check_every: 24h
   type: git
   source:
@@ -275,7 +275,7 @@ resources:
     - src/helm
 
 - name: chart-source-code
-  webhook_token: ((webhook_token_chart_source_code))
+  webhook_token: ((webhook_token.chart_source_code))
   check_every: 24h
   type: git
   source:
@@ -315,11 +315,11 @@ resources:
   source:
     owner: timotto
     repository: concourse-auth-gateway
-    access_token: ((github-release-token))
+    access_token: ((github.access_token))
 
 resource_types:
 - name: remote-docker-image
-  type: docker-image
+  type: registry-image
   source:
     repository: timotto/docker-image-resource
     tag: latest
