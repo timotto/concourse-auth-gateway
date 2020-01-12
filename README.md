@@ -1,3 +1,9 @@
+# Deprecated
+
+Since Concourse now supports different user roles this gateway is no longer required to view pipelines.
+
+The pipeline for this project has been removed and there will be no more updates.
+
 # Concourse Authenticating Gateway
 
 [![Build Status](https://travis-ci.org/timotto/concourse-auth-gateway.svg?branch=master)](https://travis-ci.org/timotto/concourse-auth-gateway)
