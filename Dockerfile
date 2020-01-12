@@ -1,4 +1,4 @@
-FROM node:slim AS build
+FROM node:12-alpine AS build
 
 ADD . /build
 
@@ -10,7 +10,7 @@ RUN npm install && \
     rm -rf node_modules/ && \
     npm install --production=true
 
-FROM node:slim AS runtime
+FROM node:12-alpine AS runtime
 
 COPY --from=build /build /app
 
